@@ -1,6 +1,19 @@
 default:
-  input_synid: syn7984097
-  project_id: syn25791854
-  network_method: c3net
-  temp_storage_loc: /home/sage
-  output_path: 
+  project_files:
+    input_synid: syn7984097
+    project_id: syn25791854
+    network_method: c3net
+    p_val:
+    temp_storage_loc: /home/sage
+
+  provenance:
+    prov_file:
+    
+    
+
+  output_profile:
+    output_path:
+    error_path:
+  computing_specs:
+    ncores: 96    
+   
