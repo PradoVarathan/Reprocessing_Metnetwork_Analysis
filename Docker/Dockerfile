@@ -16,7 +16,10 @@ RUN apt-get update -y\
 && R -e "devtools::install_github('brian-bot/githubr')"\
 && R -e "install.packages('c3net')"\
 && R -e "install.packages('config')"\
-&& R -e "install.packages('optparse')"
+&& R -e "install.packages('optparse')"\
+&& R -e "install.packages('parmigene')"\
+&& R -e "install.packages('data.table')"\
+&& R -e "install.packages('WGCNA')"
 
 RUN mkdir ~/metasample \
 && mkdir ~/Analysis_Scripts \

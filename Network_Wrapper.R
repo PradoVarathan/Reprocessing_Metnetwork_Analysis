@@ -13,6 +13,9 @@ library(githubr)
 library(c3net)
 library(config)
 library(optparse)
+library(data.table)
+library(parmigene)
+library(WGCNA)
 
 # Obtaining the data - From User --------------------------------------------
 
@@ -32,17 +35,16 @@ config <- config::get(file = option_list$config_file)
 
 #Linking with Project
 synLogin(email = req_args$synapse_user, password = req_args$synapse_pass)
-project = Project(config$project_id)
+project = Project(config$input_profile$project_id)
 project <- synStore(project)
 
 # Data
-synID_input = config$input_synid
-data = synGet(synID_input, downloadLocation = config$temp_storage_loc)
+synID_input = config$input_profile$input_synid
+data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_loc)
 
 # Performing the analysis -------------------------------------------------
 
-net_methods = config$netowrk_method
-net_methods = strsplit(net_methods,",")[[1]]
+net_methods = config$input_profile$netowrk_method
 
 '''
     Working on only the light networks for now - C3 net, mrnet and WGCNA
@@ -55,6 +57,7 @@ net_methods = strsplit(net_methods,",")[[1]]
   network <- network*upper.tri(network)
   write.csv(network,file=paste0(outputpath,'c3netNetwork.csv'),quote=F)
 }
+
 
     mrnetWrapper = function(data,path=NULL,pval=1,outputpath){
   library(parmigene)                               ########## Need installation in docker
@@ -79,11 +82,38 @@ net_methods = strsplit(net_methods,",")[[1]]
   network <- network*upper.tri(network)
   write.csv(network,file=paste0(outputpath,'mrnetNetwork.csv'),quote=F)
 }
+
+
+
+
+wgcnaTOM <- function(data,path=NULL,pval=1,outputpath,RsquaredCut=.80,defaultNaPower=6){
+  library(WGCNA)
+  res <- WGCNA::pickSoftThreshold(data,RsquaredCut=RsquaredCut)
+  if(is.na(res$powerEstimate)){
+    res$powerEstimate<-defaultNaPower
+  }
+  network <- abs(cor(data))^res$powerEstimate
+  write.csv(network*upper.tri(network),file=paste0(outputpath,'wgcnaSoftThresholdNetwork.csv')) 
+  gc()
+  cat(res$powerEstimate,'\n',sep='',file=paste0(outputpath,'wgcnaPowerEstimate.txt'))
+  #save(network,file='result_wgcnaSoftThreshold.rda')
+  print(res$powerEstimate)
+  cn <- colnames(network)
+  network <- TOMsimilarity(network)
+  colnames(network) <- cn
+  rownames(network) <- cn
+  #save(network,file=paste0(outputpath,'result_wgcnaTOM.rda'))
+  network <- network*upper.tri(network)
+  write.csv(network,file=paste0(outputpath,'wgcnaTopologicalOverlapMatrixNetwork.csv'),quote=F)
+}
 '''
 
 for (method in net_methods){
     switch(method,
-            "c3net" = )
+            "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path),
+            "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path),
+            "wgcna" = wgcnaTOM(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path, 
+                                config$input_profile$rsquaredcut, config$input_profile$defaultnaPower))
 }
 
 

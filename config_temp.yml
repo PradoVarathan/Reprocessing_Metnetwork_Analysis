@@ -1,10 +1,12 @@
 default:
-  project_files:
+  input_profile:
     input_synid: syn7984097
     project_id: syn25791854
-    network_method: c3net
+    network_method: ["c3net"]
     p_val:
     temp_storage_loc: /home/sage
+    rsquaredCut:
+    defaultnaPower:
 
   provenance:
     prov_file:
