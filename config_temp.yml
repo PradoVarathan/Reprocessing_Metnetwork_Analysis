@@ -1,0 +1,6 @@
+default:
+  input_synid: syn7984097
+  project_id: syn25791854
+  network_method: c3net
+  temp_storage_loc: /home/sage
+  output_path: 
