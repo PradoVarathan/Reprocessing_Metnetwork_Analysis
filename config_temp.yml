@@ -3,19 +3,36 @@ default:
     input_synid: syn7984097
     project_id: syn25791854
     network_method: ["c3net"]
-    p_val:
+    p_val: 1
     temp_storage_loc: /home/sage
-    rsquaredCut:
-    defaultnaPower:
-
+    rsquaredCut: 0.80
+    defaultnaPower: 6
   provenance:
-    prov_file:
-    
-    
-
+    annotations:
+      data_type: ['clinical','geneExpression']
+      resource_type: metadata
+      metadata_type: 'analytical covariates'
+      ismodelsystem: FALSE
+      ismultispecimen: TRUE
+      fileformat: csv
+      grant: U01AG046152
+      species: Human
+      organ: brain
+      tissue: ['dorsolateral prefrontal cortex', 'Head of caudate nucleus', 'posterior cingulate cortex']
+      study: ["ROSMAP","rnaSeqReprocessing"]
+      consortium: AMP-AD
+      assay: rnaSeq
+    code_annotations:
+        repository: PradoVarathan/Reprocessing_Metanetwork_Analysis
+        ref: branch
+        ref_name: main
+        repository_path: Network_Wrapper.R
+    activity_name: c3net_rosmap_network
+    activity_description: 'Using the c3net to prepare network from rosmap data'
   output_profile:
-    output_path:
-    error_path:
+    output_path: Rosmap_c3net
+    output_name: 'Final Rosmap Network from C3Net'
+    error_path: Rosmap_c3net_error
   computing_specs:
     ncores: 96    
    

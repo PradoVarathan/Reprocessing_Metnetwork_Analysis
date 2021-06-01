@@ -16,6 +16,7 @@ library(optparse)
 library(data.table)
 library(parmigene)
 library(WGCNA)
+library(githubr)
 
 # Obtaining the data - From User --------------------------------------------
 
@@ -46,74 +47,54 @@ data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_
 
 net_methods = config$input_profile$netowrk_method
 
-'''
-    Working on only the light networks for now - C3 net, mrnet and WGCNA
-    Just storing the function for reference to delete later
-
-    c3netWrapper  = function(data,path=NULL,pval=1,outputpath){
-  library(c3net)
-  network <- c3net(t(data))
-  #save(network,file=paste0(outputpath,'result_c3net.rda'))
-  network <- network*upper.tri(network)
-  write.csv(network,file=paste0(outputpath,'c3netNetwork.csv'),quote=F)
-}
-
-
-    mrnetWrapper = function(data,path=NULL,pval=1,outputpath){
-  library(parmigene)                               ########## Need installation in docker
-  metanetwork::aracne(data,path,pval,outputpath)
-  library(data.table)
-  library(dplyr)
-  if(pval==1){
-    fileName <- paste0(outputpath,'aracneNetwork.csv')
-  }else{
-    fileName <- paste0(outputpath,'aracneThresholdNetwork.csv')
-  }
-  cat('fileName:',fileName,'\n')
-  #load(fileName)
-  #data.matrix(data.frame(data.table::fread('~/Desktop/sparrowZNetwork.csv',data.table=F),row.names=1))
-  network <- data.table::fread(fileName,data.table=F) %>%
-    data.frame(row.names=1) %>%
-    data.matrix
-  network <- network+t(network)
-  gc()
-  network <- parmigene::mrnet(data.matrix(network))
-  #save(network,file=paste0(outputpath,'result_mrnet.rda'))
-  network <- network*upper.tri(network)
-  write.csv(network,file=paste0(outputpath,'mrnetNetwork.csv'),quote=F)
-}
-
-
-
-
-wgcnaTOM <- function(data,path=NULL,pval=1,outputpath,RsquaredCut=.80,defaultNaPower=6){
-  library(WGCNA)
-  res <- WGCNA::pickSoftThreshold(data,RsquaredCut=RsquaredCut)
-  if(is.na(res$powerEstimate)){
-    res$powerEstimate<-defaultNaPower
-  }
-  network <- abs(cor(data))^res$powerEstimate
-  write.csv(network*upper.tri(network),file=paste0(outputpath,'wgcnaSoftThresholdNetwork.csv')) 
-  gc()
-  cat(res$powerEstimate,'\n',sep='',file=paste0(outputpath,'wgcnaPowerEstimate.txt'))
-  #save(network,file='result_wgcnaSoftThreshold.rda')
-  print(res$powerEstimate)
-  cn <- colnames(network)
-  network <- TOMsimilarity(network)
-  colnames(network) <- cn
-  rownames(network) <- cn
-  #save(network,file=paste0(outputpath,'result_wgcnaTOM.rda'))
-  network <- network*upper.tri(network)
-  write.csv(network,file=paste0(outputpath,'wgcnaTopologicalOverlapMatrixNetwork.csv'),quote=F)
-}
-'''
-
-for (method in net_methods){
+for (method in net_methods){# Assuming we have more methods - not developing for now
     switch(method,
-            "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path),
+            "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path),# What does this path define in main function?
             "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path),
             "wgcna" = wgcnaTOM(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path, 
                                 config$input_profile$rsquaredcut, config$input_profile$defaultnaPower))
+
 }
 
+# Obtaining the data - For provenance --------------------------------------------
 
+activity <- synapser::synGetEntity(config$input_profile$project_id)
+
+all.annotations <- list(
+  dataType = config$provenance$annotations$data_type,
+  resourceType = config$provenance$annotations$resuorce_type,
+  metadataType = config$provenance$annotations$metadata_type,
+  isModelSystem = config$provenance$annotations$ismodelsystem,
+  isMultiSpecimen = config$provenance$annotations$ismultispecimen,
+  fileFormat = config$provenance$annotations$fileformat,
+  grant = config$provenance$annotations$grant,
+  species = config$provenance$annotations$species,
+  organ = config$provenance$annotations$organ,
+  tissue = config$provenance$annotations$tissue,
+  study = config$provenance$annotations$study, 
+  consortium = config$provenance$annotations$consortium,
+  assay = config$provenance$annotations$assay
+)
+
+thisRepo <- githubr::getRepo(
+  repository = config$provenance$code_annotations$repository,
+  ref = config$provenance$code_annotations$ref,
+  refName = config$provenance$code_annotations$ref_name
+)
+
+thisFile <- githubr::getPermlink(
+  repository = thisRepo,
+  repositoryPath = config$provenance$code_annotations$repository_path
+)
+
+ENRICH_OBJ <- synapser::synStore( synapser::File( 
+  path = config$output_profile$output_path,
+  name = config$output_profile$output_name,
+  parentId = activity$properties$id),
+  used = config$input_profile$input_synid,
+  activityName = config$provenance$activity_name,
+  executed = thisFile,
+  activityDescription = config$provenance$activity_description
+)
+
+synapser::synSetAnnotations(ENRICH_OBJ, annotations = all.annotations)
