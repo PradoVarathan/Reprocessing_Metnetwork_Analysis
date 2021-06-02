@@ -3,7 +3,9 @@ default:
     input_synid: syn7984097
     project_id: syn25791854
     network_method: ["c3net"]
-    p_val: 1
+    p_val_c3net: 1
+    p_val_mrnet: 1
+    p_val_wgcna: 1
     temp_storage_loc: /home/sage
     rsquaredCut: 0.80
     defaultnaPower: 6

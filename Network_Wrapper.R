@@ -49,9 +49,9 @@ data = read.csv(data$path)
 
 for (method in net_methods){# Assuming we have more methods - not developing for now
   switch(method,
-         "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path),# What does this path define in main function?
-         "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path),
-         "wgcna" = wgcnaTOM(data, path = NULL, pval = config$input_profile$pval, config$output_profile$output_path, 
+         "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?
+         "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$p_val_mrnet, config$output_profile$output_path),
+         "wgcna" = wgcnaTOM(data, path = NULL, pval = config$input_profile$p_val_wgcna, config$output_profile$output_path, 
                             config$input_profile$rsquaredcut, config$input_profile$defaultnaPower))
   output_filename <- paste0(config$output_profile$output_path,method,'Network.csv')
   
@@ -106,3 +106,4 @@ ENRICH_OBJ <- synapser::synStore( synapser::File(
 )
 
 synapser::synSetAnnotations(ENRICH_OBJ, annotations = all.annotations)
+
