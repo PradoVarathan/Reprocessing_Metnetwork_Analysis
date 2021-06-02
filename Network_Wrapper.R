@@ -16,6 +16,8 @@ library(optparse)
 library(data.table)
 library(parmigene)
 library(WGCNA)
+library(Rmpi)
+library(utilityFunctions)
 
 # Obtaining the data - From User --------------------------------------------
 
@@ -52,9 +54,33 @@ for (method in net_methods){# Assuming we have more methods - not developing for
          "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?
          "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$p_val_mrnet, config$output_profile$output_path),
          "wgcna" = wgcnaTOM(data, path = NULL, pval = config$input_profile$p_val_wgcna, config$output_profile$output_path, 
-                            config$input_profile$rsquaredcut, config$input_profile$defaultnaPower))
-  output_filename <- paste0(config$output_profile$output_path,method,'Network.csv')
-  
+                            config$input_profile$rsquaredcut, config$input_profile$defaultnaPower),
+         "lassoAIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "lassoBIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "lassoCV1se" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "lassoCVmin" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "ridgeAIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "ridgeBIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "ridgeCV1se" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "ridgeCVmin" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "sparrowZ" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "sparrow2Z" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "genie3" = mpiWrapper(data, nodes = config$computing_specs$heavy_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path),
+         "tigress" = mpiWrapper(data, nodes = config$computing_specs$heavy_ncores, pathv = NULL, regressionFunction = method,
+                            outputpath = config$output_profile$output_path))
+
+    output_filename <- paste0(config$output_profile$output_path,method,'Network.csv')
   
 }
 

@@ -19,9 +19,11 @@ RUN apt-get update -y\
 && R -e "install.packages('optparse')"\
 && R -e "install.packages('parmigene')"\
 && R -e "install.packages('data.table')"\
-&& R -e "install.packages('WGCNA')"
+&& R -e "install.packages('WGCNA')"\
+&& R -e "install.packages('Rmpi')"\
+&& R -e "install.packages('utilityFunctions')"
 
-RUN mkdir ~/metasample \
+RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
-&& git clone https://github.com/Sage-Bionetworks/metanetwork ~/metasample\
+&& git clone https://github.com/Sage-Bionetworks/metanetwork ~/metanetwork\
 && git clone https://github.com/PradoVarathan/Reprocessing_Metnetwork_Analysis ~/Analysis_Scripts
