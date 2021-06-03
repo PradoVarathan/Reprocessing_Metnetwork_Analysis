@@ -33,6 +33,7 @@ default:
     activity_description: 'Using the c3net to prepare network from rosmap data'
   output_profile:
     output_path: Rosmap_c3net
+    md5_output_path: Rosmap_c3netmd5.out
     output_name: 'Final Rosmap Network from C3Net'
     error_path: Rosmap_c3net_error
   computing_specs:

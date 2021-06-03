@@ -48,6 +48,7 @@ default:
     activity_description: 'Using the c3net to prepare network from rosmap data' # Detailed explanation of the activity in quotes to be updated on Synapse
   output_profile:
     output_path: Rosmap_c3net # The full path for the final output file
+    md5_output_path: Rosmap_c3net
     output_name: 'Final Rosmap Network from C3Net' # The output name as to be updated in Synapse Project
     error_path: Rosmap_c3net_error # The full path for the error file from the process
   computing_specs:
