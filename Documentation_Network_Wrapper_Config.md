@@ -60,19 +60,19 @@ More details on the functioning of Provenance can be found [here](https://help.s
 A sample annotation profile includes the following required information and can be replaced with NULL if unknown
 
 
-data_type: ['clinical','geneExpression'] 
-resource_type: metadata
-metadata_type: 'analytical covariates'
-ismodelsystem: FALSE
-ismultispecimen: TRUE
-fileformat: csv
-grant: U01AG046152
-species: Human
-organ: brain
-tissue: ['dorsolateral prefrontal cortex', 'Head of caudate nucleus', 'posterior cingulate cortex']
-study: ["ROSMAP","rnaSeqReprocessing"]
-consortium: AMP-AD
-assay: rnaSeq
+data_type: ['clinical','geneExpression']   
+resource_type: metadata   
+metadata_type: 'analytical covariates' 
+ismodelsystem: FALSE   
+ismultispecimen: TRUE  
+fileformat: csv  
+grant: U01AG046152  
+species: Human  
+organ: brain  
+tissue: ['dorsolateral prefrontal cortex', 'Head of caudate nucleus', 'posterior cingulate cortex']  
+study: ["ROSMAP","rnaSeqReprocessing"]  
+consortium: AMP-AD  
+assay: rnaSeq  
       
 `code_annotations`  For development purpose only. **DO NOT CHANGE** the code annotations unless user determines to use another analysis pipeline
 
