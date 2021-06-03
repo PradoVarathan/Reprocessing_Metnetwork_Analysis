@@ -36,6 +36,6 @@ default:
     output_name: 'Final Rosmap Network from C3Net'
     error_path: Rosmap_c3net_error
   computing_specs:
-    light_ncores: 96    
-    medium_ncores: 
-    heavy_ncores: 
+    light_ncores: 96
+    medium_ncores: 128
+    heavy_ncores: 256

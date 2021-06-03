@@ -1,6 +1,6 @@
 ---
 title: "Preparing Config File for Network Creation"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +21,7 @@ For the current development, we use a single (default) config profile per file
  Each of these sections are further divided into subsections and tags that has to be added and required for most cases, else filled as NULL
 
 ***
-#### `Input Profile`
+#### `Input Profile`   
 
 
 
@@ -58,7 +58,7 @@ Optional. Default NA power value for WGCNA network method and if not used, leave
     
 ***
 
-#### `Provenance`    
+#### `Provenance`      
     
 **Annotations**   
 Provenance annoation subsections - can be obtained from the parent syn ID   
