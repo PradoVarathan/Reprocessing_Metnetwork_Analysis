@@ -97,6 +97,9 @@ assay: rnaSeq
 **output_name**  
 *Required*. The output name as to be updated in Synapse Project  
 
+**md5_output_path**  
+*Required*. The output path for the md5 formatted output file  
+
 **error_path**   
 *Required*. The full path for the error file from the process  
 
