@@ -3,6 +3,7 @@ FROM rocker/tidyverse:4.0.0
 RUN apt-get update -y\
 && apt-get install -y dpkg-dev zlib1g-dev libssl-dev libffi-dev zlib1g-dev libbz2-dev liblzma-dev build-essential libglpk40\
 && apt-get install -y curl libcurl4-openssl-dev\
+&& apt-get install -y libopenmpi-dev\
 && apt-get install -y git\
 && R -e "install.packages('BiocManager')"\
 && R -e "install.packages('dplyr')"\
@@ -19,15 +20,10 @@ RUN apt-get update -y\
 && R -e "install.packages('optparse')"\
 && R -e "install.packages('parmigene')"\
 && R -e "install.packages('data.table')"\
-&& R -e "install.packages('WGCNA')"\
 && R -e "install.packages('Rmpi')"\
-&& R -e "install.packages('utilityFunctions')"\
 && R -e "install.packages('Matrix')" \
 && R -e "install.packages('reader')"
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
-&& git clone https://github.com/Sage-Bionetworks/metanetwork ~/metanetwork\
-&& wget https://github.com/josemaz/aracne-multicore/raw/main/src/ARACNE.src.tar.gz\
-&& tar -xzvf ARCANCE.src.tar.gz \
-&& git clone https://github.com/PradoVarathan/Reprocessing_Metnetwork_Analysis ~/Analysis_Scripts
+&& git clone https://github.com/Sage-Bionetworks/metanetwork ~/metanetwork
