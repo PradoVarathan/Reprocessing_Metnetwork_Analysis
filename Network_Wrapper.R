@@ -1,23 +1,24 @@
 
 # Calling in Libraries ----------------------------------------------------
 
-library(dplyr)
-library(glmnet)
-library(randomForest)
-library(Hmisc)
-library(lars)
-library(WGCNA)
-library(synapser)
-library(metanetwork)
-library(githubr)
-library(c3net)
-library(config)
-library(optparse)
-library(data.table)
-library(parmigene)
-library(WGCNA)
-library(Rmpi)
-library(utilityFunctions)
+library(dplyr, quietly = TRUE)
+library(glmnet, quietly = TRUE)
+library(randomForest, quietly = TRUE)
+library(Hmisc, quietly = TRUE)
+library(lars, quietly = TRUE)
+library(WGCNA, quietly = TRUE)
+library(synapser, quietly = TRUE)
+library(metanetwork, quietly = TRUE)
+library(githubr, quietly = TRUE)
+library(c3net, quietly = TRUE)
+library(config, quietly = TRUE)
+library(optparse, quietly = TRUE)
+library(data.table, quietly = TRUE)
+library(parmigene, quietly = TRUE)
+library(WGCNA, quietly = TRUE)
+library(reader, quietly = TRUE)
+#library(Rmpi) -->installation error
+#library(utilityFunctions) -->installation error
 
 # Obtaining the data - From User --------------------------------------------
 
@@ -33,7 +34,7 @@ req_args <- parse_args(OptionParser(option_list=option_list))
 
 #Setting up the cofig file 
 Sys.setenv(R_CONFIG_ACTIVE = "default")
-config <- config::get(file = option_list$config_file)
+config <- config::get(file = req_args$config_file)
 
 #Linking with Project
 synLogin(email = req_args$synapse_user, password = req_args$synapse_pass)
@@ -47,7 +48,7 @@ data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_
 # Performing the analysis -------------------------------------------------
 
 net_methods = config$input_profile$network_method
-data = read.csv(data$path)
+data = reader::reader(data$path)
 
 for (method in net_methods){# Assuming we have more methods - not developing for now
   switch(method,

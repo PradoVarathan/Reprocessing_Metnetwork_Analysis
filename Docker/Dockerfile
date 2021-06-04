@@ -12,7 +12,7 @@ RUN apt-get update -y\
 && R -e "install.packages('lars')"\
 && R -e "BiocManager::install('WGCNA')"\
 && R -e "install.packages('synapser', repos=c('http://ran.synapse.org', 'http://cran.fhcrc.org'))"\
-&& R -e "devtools::install_github('blogsdon/metanetwork')"\
+&& R -e "devtools::install_github('PradoVarathan/metanetwork')"\
 && R -e "devtools::install_github('brian-bot/githubr')"\
 && R -e "install.packages('c3net')"\
 && R -e "install.packages('config')"\
@@ -21,9 +21,13 @@ RUN apt-get update -y\
 && R -e "install.packages('data.table')"\
 && R -e "install.packages('WGCNA')"\
 && R -e "install.packages('Rmpi')"\
-&& R -e "install.packages('utilityFunctions')"
+&& R -e "install.packages('utilityFunctions')"\
+&& R -e "install.packages('Matrix')" \
+&& R -e "install.packages('reader')"
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
 && git clone https://github.com/Sage-Bionetworks/metanetwork ~/metanetwork\
+&& wget https://github.com/josemaz/aracne-multicore/raw/main/src/ARACNE.src.tar.gz\
+&& tar -xzvf ARCANCE.src.tar.gz \
 && git clone https://github.com/PradoVarathan/Reprocessing_Metnetwork_Analysis ~/Analysis_Scripts
