@@ -91,7 +91,7 @@ assay: rnaSeq
 ***
 #### `Output Profile`  
 
-**output_path** 
+**output_path**   
 *Required*. The full path for the final output file  
 
 **output_name**  
