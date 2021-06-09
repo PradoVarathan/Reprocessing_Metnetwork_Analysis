@@ -23,7 +23,7 @@ RUN apt-get update -y\
 && R -e "install.packages('Rmpi')"\
 && R -e "install.packages('Matrix')" \
 && R -e "install.packages('reader')"\
-&& R -e "isntall.packages('caroline')"
+&& R -e "install.packages('caroline')"
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
