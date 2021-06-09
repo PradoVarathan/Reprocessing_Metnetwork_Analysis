@@ -63,37 +63,44 @@ for (method in net_methods){# Assuming we have more methods - not developing for
          "wgcna" = wgcnaTOM(data, path = NULL, pval = config$input_profile$p_val_wgcna, config$output_profile$output_path, 
                             config$input_profile$rsquaredcut, config$input_profile$defaultnaPower),
          "lassoAIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                 outputpath = config$output_profile$output_path),
          "lassoBIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                 outputpath = config$output_profile$output_path),
          "lassoCV1se" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                   outputpath = config$output_profile$output_path),
          "lassoCVmin" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                   outputpath = config$output_profile$output_path),
          "ridgeAIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                 outputpath = config$output_profile$output_path),
          "ridgeBIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                 outputpath = config$output_profile$output_path),
          "ridgeCV1se" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                   outputpath = config$output_profile$output_path),
          "ridgeCVmin" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                   outputpath = config$output_profile$output_path),
          "sparrowZ" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                 outputpath = config$output_profile$output_path),
          "sparrow2Z" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                                  outputpath = config$output_profile$output_path),
          "genie3" = mpiWrapper(data, nodes = config$computing_specs$heavy_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path),
+                               outputpath = config$output_profile$output_path),
          "tigress" = mpiWrapper(data, nodes = config$computing_specs$heavy_ncores, pathv = NULL, regressionFunction = method,
-                            outputpath = config$output_profile$output_path))
-
-    output_filename <- paste0(config$output_profile$output_path,method,'Network.csv')
+                                outputpath = config$output_profile$output_path))
+  
+  output_filename <- list.files(pattern = method )
   
 }
 
 # Obtaining the data - For provenance --------------------------------------------
 
 activity <- synapser::synGet(config$input_profile$project_id)
+
+dataFolder <- Folder(method,parent = config$input_profile$project_id)
+dataFolder <- synStore(dataFolder)
+for (filePath in output_filename){
+  file <- File(path = filePath, parent = dataFolder)
+  file <- synStore(file)
+}
 
 all.annotations <- list(
   dataType = config$provenance$annotations$data_type,
@@ -116,20 +123,20 @@ thisFile = NULL
 
 try(
   thisRepo <- githubr::getRepo(
-  repository = config$provenance$code_annotations$repository,
-  ref = config$provenance$code_annotations$ref,
-  refName = config$provenance$code_annotations$ref_name
+    repository = config$provenance$code_annotations$repository,
+    ref = config$provenance$code_annotations$ref,
+    refName = config$provenance$code_annotations$ref_name
   ), silent = TRUE
 )
 try(
-thisFile <- githubr::getPermlink(
-  repository = thisRepo,
-  repositoryPath = config$provenance$code_annotations$repository_path
+  thisFile <- githubr::getPermlink(
+    repository = thisRepo,
+    repositoryPath = config$provenance$code_annotations$repository_path
   ), silent = TRUE
 )
 
 ENRICH_OBJ <- synapser::synStore( synapser::File( 
-  path = output_filename,
+  path = output_filename[length(output_filename)],
   name = config$output_profile$output_name,
   parentId = activity$properties$id),
   used = config$input_profile$input_synid,
@@ -142,7 +149,6 @@ synapser::synSetAnnotations(ENRICH_OBJ, annotations = all.annotations)
 
 # Formatting the network to md5 format --------------------------------------------
 
-md5Command <- paste0('md5sum ', output_filename)
+md5Command <- paste0('md5sum ', output_filename[length(output_filename)])
 md5 <- strsplit(system(md5Command, intern = TRUE), '  ')[[1]][1]
 cat(md5, '\n', file = config$output_profile$md5_output_path, sep = '')
-
