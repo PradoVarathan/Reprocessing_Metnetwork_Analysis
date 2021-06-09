@@ -15,9 +15,8 @@ library(config, quietly = TRUE)
 library(optparse, quietly = TRUE)
 library(data.table, quietly = TRUE)
 library(parmigene, quietly = TRUE)
-library(WGCNA, quietly = TRUE)
 library(reader, quietly = TRUE)
-#library(Rmpi) -->installation error
+library(Rmpi)
 #library(utilityFunctions) -->installation error
 
 # Obtaining the data - From User --------------------------------------------
