@@ -23,6 +23,10 @@ For the current development, we use a single (default) config profile per file
 **project_id**    
 *Required*. The Synapse ID of the Project folder currently the user owns to build provenance and upload files 
     
+**na_fill**    
+*Required*. Value to be filled in case of missing values, else will be omitted from original dataset.  
+
+
 **network_method**    
 *Required*. The type of network methods to be used in a list format with quotes. 
 

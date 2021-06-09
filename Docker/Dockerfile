@@ -22,7 +22,8 @@ RUN apt-get update -y\
 && R -e "install.packages('data.table')"\
 && R -e "install.packages('Rmpi')"\
 && R -e "install.packages('Matrix')" \
-&& R -e "install.packages('reader')"
+&& R -e "install.packages('reader')"\
+&& R -e "isntall.packages('caroline')"
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \

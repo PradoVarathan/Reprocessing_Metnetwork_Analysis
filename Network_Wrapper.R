@@ -50,6 +50,12 @@ data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_
 net_methods = config$input_profile$network_method
 data = reader::reader(data$path)
 
+if(is.null(config$input_profile$na_fill)){
+  data <- na.omit(data)
+}else{
+  data[is.na(data)] <- config$input_profile$na_fill # Ideally, user could insert a large negative number or use min(data)
+}
+
 for (method in net_methods){# Assuming we have more methods - not developing for now
   switch(method,
          "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?
