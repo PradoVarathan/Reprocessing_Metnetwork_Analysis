@@ -51,7 +51,7 @@ net_methods = config$input_profile$network_method
 data = reader::reader(data$path)
 
 if(is.null(config$input_profile$na_fill)){
-  data <- na.omit(data)
+  data <- metanetwork::winsorizeData(data)
 }else{
   data[is.na(data)] <- config$input_profile$na_fill # Ideally, user could insert a large negative number or use min(data)
 }
