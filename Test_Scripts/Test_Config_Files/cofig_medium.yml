@@ -2,7 +2,7 @@ default:
   input_profile:
     input_synid: syn25874033
     project_id: syn25872026
-    network_method: ['c3net','mrnet','wgcna']
+    network_method: ['lassoAIC', 'lassoBIC', 'lassoCV1se', 'lassoCVmin', 'ridgeAIC', 'ridgeBIC', 'ridgeCV1se', 'ridgeCVmin', 'sparrowZ', 'sparrow2Z']
     na_fill: NULL
     p_val_c3net: 1
     p_val_mrnet: 1
@@ -29,11 +29,11 @@ default:
         repository: PradoVarathan/Reprocessing_Metanetwork_Analysis
         ref: branch
         ref_name: main
-        repository_path: Test_Scripts/Light_Networks.R
-    activity_name: LightNet_Test
-    activity_description: 'Testing light networks with sample simulated data'
+        repository_path: Test_Scripts/Medium_Networks.R
+    activity_name: MediumNet_Test
+    activity_description: 'Testing medium networks with sample simulated data'
   output_profile:
-    output_path: light
+    output_path: medium
     md5_output_path: Simulation_md5.out
     output_name: 'Networks from Simulation data'
     error_path: simulation_error_light
