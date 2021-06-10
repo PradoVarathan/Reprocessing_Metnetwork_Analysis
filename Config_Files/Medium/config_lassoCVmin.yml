@@ -1,7 +1,7 @@
 default:
   input_profile:
     input_synid: syn7984097
-    project_id: syn25791854
+    project_id: syn25872026
     network_method: ["lassoCVmin"]
     na_fill: NULL
     p_val_c3net: 1

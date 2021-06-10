@@ -23,8 +23,9 @@ RUN apt-get update -y\
 && R -e "install.packages('Rmpi')"\
 && R -e "install.packages('Matrix')" \
 && R -e "install.packages('reader')"\
-&& R -e "install.packages('caroline')"
+&& R -e "install.packages('caroline')"\
+&& R -e "install.packages('bench')"
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
-&& git clone https://github.com/Sage-Bionetworks/metanetwork ~/metanetwork
+&& git clone https://github.com/PradoVarathan/metanetwork ~/metanetwork

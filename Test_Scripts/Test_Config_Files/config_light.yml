@@ -1,8 +1,8 @@
 default:
   input_profile:
-    input_synid: syn7984097
+    input_synid: syn25874033
     project_id: syn25872026
-    network_method: ["ridgeCV1se"]
+    network_method: ["c3net","mrnet","wgcna"]
     na_fill: NULL
     p_val_c3net: 1
     p_val_mrnet: 1
@@ -29,15 +29,15 @@ default:
         repository: PradoVarathan/Reprocessing_Metanetwork_Analysis
         ref: branch
         ref_name: main
-        repository_path: Network_Wrapper.R
-    activity_name: ridgeCV1se_rosmap_network
-    activity_description: 'Using the ridgeCV1se to prepare network from rosmap data'
+        repository_path: Test_Scripts/Light_Networks.R
+    activity_name: LightNet_Test
+    activity_description: 'Testing light networks with sample simulated data'
   output_profile:
-    output_path: /home/sage/rosmap
-    md5_output_path: /home/sage/rosmap_md5.out
-    output_name: 'Final Rosmap Network from ridgeCV1se'
-    error_path: /home/sage/rosmap
+    output_path: /home/sage
+    md5_output_path: Simulation_md5.out
+    output_name: 'Networks from Simulation data'
+    error_path: simulation_error_light
   computing_specs:
     light_ncores: 96
-    medium_ncores: 128
+    medium_ncores: 48
     heavy_ncores: 256
