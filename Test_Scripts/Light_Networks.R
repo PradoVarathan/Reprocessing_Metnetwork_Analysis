@@ -100,7 +100,8 @@ for (file_config in config_files){
            "tigress" = mpiWrapper(data, nodes = config$computing_specs$heavy_ncores, pathv = NULL, regressionFunction = method,
                                   outputpath = config$output_profile$output_path))
     
-  },check=FALSE)
+  ,check=FALSE)
     benchmark_filename = paste0(config$output_profile$output_path,"/",method,"_Performance_",as.character(reqs_args$percentage_data),".csv")
     write.csv(benchMarkRes,benchmark_filename,quote=F,row.names = T)
+  }
 }
