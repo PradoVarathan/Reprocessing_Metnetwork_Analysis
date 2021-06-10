@@ -39,5 +39,5 @@ default:
     error_path: simulation_error_light
   computing_specs:
     light_ncores: 96
-    medium_ncores: 48
+    medium_ncores: 32
     heavy_ncores: 256
