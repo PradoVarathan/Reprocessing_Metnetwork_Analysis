@@ -41,8 +41,8 @@ config_files = list.files(path = req_args$config_file)
 for (file_config in config_files){
   
   #Setting up the cofig file 
-  file_config = paste0(req_args$config_file,"/",file_config)
-  config <- config::get(file = file_config)
+  file_config_path = paste0(req_args$config_file,file_config)
+  config <- config::get(file = file_config_path)
   setwd(config$input_profile$temp_storage_loc)
   
   #Linking with Project
@@ -56,10 +56,10 @@ for (file_config in config_files){
   
   # Performing the analysis -------------------------------------------------
   
-  net_methods = config$input_profile$net_methods
+  net_methods = c('c3net','mrnet','wgcna')
   data = reader::reader(data$path)
-  rows_to_use = nrow(data)*req_args$percentage_data
-  cols_to_use = ncol(data)*req_args$percentage_data
+  rows_to_use = (nrow(data)*req_args$percentage_data)/100
+  cols_to_use = (ncol(data)*req_args$percentage_data)/100
   data = data[1:rows_to_use,1:cols_to_use]
   
   if(is.null(config$input_profile$na_fill)){
@@ -70,7 +70,7 @@ for (file_config in config_files){
   
   for (method in net_methods){
     
-    benchMarkRes = bench(switch(method,
+    benchMarkRes = mark(switch(method,
            "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?
            "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$p_val_mrnet, config$output_profile$output_path),
            "wgcna" = wgcnaTOM(data, path = NULL, pval = config$input_profile$p_val_wgcna, config$output_profile$output_path, 
@@ -101,7 +101,8 @@ for (file_config in config_files){
                                   outputpath = config$output_profile$output_path))
     
   ,check=FALSE)
-    benchmark_filename = paste0(config$output_profile$output_path,"/",method,"_Performance_",as.character(reqs_args$percentage_data),".csv")
-    write.csv(benchMarkRes,benchmark_filename,quote=F,row.names = T)
+    setwd(config$input_profile$temp_storage_loc)
+    benchmark_filename = paste0(method,"_",as.character(req_args$percentage_data),"_Performance")
+    write.table(benchMarkRes[,1:9],benchmark_filename,quote=F,row.names = T)
   }
 }
