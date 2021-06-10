@@ -53,6 +53,9 @@ for (file_config in config_files){
   # Data
   synID_input = config$input_profile$input_synid
   data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_loc)
+
+  dataFolder <- Folder('Medium',parent = config$input_profile$project_id)
+  dataFolder <- synStore(dataFolder)
   
   # Performing the analysis -------------------------------------------------
   
@@ -104,5 +107,8 @@ for (file_config in config_files){
     setwd(config$input_profile$temp_storage_loc)
     benchmark_filename = paste0(method,"_",as.character(req_args$percentage_data),"_Performance")
     write.table(benchMarkRes[,1:9],benchmark_filename,quote=F,row.names = T)
+
+    file <- File(path = benchmark_filename, parent = dataFolder)
+    file <- synStore(file)
   }
 }
