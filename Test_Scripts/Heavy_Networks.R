@@ -47,7 +47,7 @@ project <- synStore(project)
 synID_input = config$input_profile$input_synid
 data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_loc)
 
-dataFolder <- Folder('Light',parent = config$input_profile$project_id)
+dataFolder <- Folder('Heavy',parent = config$input_profile$project_id)
 dataFolder <- synStore(dataFolder)
   
 # Performing the analysis -------------------------------------------------
