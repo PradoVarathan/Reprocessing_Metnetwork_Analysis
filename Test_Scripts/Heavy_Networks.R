@@ -35,7 +35,7 @@ req_args <- parse_args(OptionParser(option_list=option_list))
 
 #Setting up the cofig file 
 Sys.setenv(R_CONFIG_ACTIVE = "default")
-config <- config::get(file = config_file)
+config <- config::get(file = req_args$config_file)
 setwd(config$input_profile$temp_storage_loc)
   
 #Linking with Project
