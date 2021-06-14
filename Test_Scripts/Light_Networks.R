@@ -65,12 +65,6 @@ rows_to_use = (nrow(data)*req_args$percentage_data)/100
 cols_to_use = (ncol(data)*req_args$percentage_data)/100
 data = data[1:rows_to_use,1:cols_to_use]
   
-if(is.null(config$input_profile$na_fill)){
-  data <- metanetwork::winsorizeData(data)
-}else{
-  data[is.na(data)] <- config$input_profile$na_fill 
-}
-  
 for (method in net_methods){
     registerDoParallel(cl)
 
