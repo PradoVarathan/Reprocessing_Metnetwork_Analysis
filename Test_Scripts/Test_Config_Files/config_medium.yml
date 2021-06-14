@@ -33,8 +33,8 @@ default:
     activity_name: MediumNet_Test
     activity_description: 'Testing medium networks with sample simulated data'
   output_profile:
-    output_path: medium
-    md5_output_path: Simulation_md5.out
+    output_path: /home/sage/medium
+    md5_output_path: /home/sage/Simulation_md5.out
     output_name: 'Networks from Simulation data'
     error_path: simulation_error_light
   computing_specs:
