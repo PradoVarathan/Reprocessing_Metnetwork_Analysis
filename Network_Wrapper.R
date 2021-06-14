@@ -17,6 +17,8 @@ library(data.table, quietly = TRUE)
 library(parmigene, quietly = TRUE)
 library(reader, quietly = TRUE)
 library(Rmpi)
+library(parallel)
+library(doParallel)
 #library(utilityFunctions) -->installation error
 
 # Obtaining the data - From User --------------------------------------------
@@ -45,6 +47,11 @@ project <- synStore(project)
 synID_input = config$input_profile$input_synid
 data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_loc)
 
+# Registering the parallel clusters
+n_cores <- detectCores()
+cl <- makeCluster(n_cores)
+
+
 # Performing the analysis -------------------------------------------------
 
 net_methods = config$input_profile$network_method
@@ -57,6 +64,8 @@ if(is.null(config$input_profile$na_fill)){
 }
 
 for (method in net_methods){# Assuming we have more methods - not developing for now
+
+  registerDoParallel(cl)
   switch(method,
          "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?
          "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$p_val_mrnet, config$output_profile$output_path),
@@ -88,8 +97,10 @@ for (method in net_methods){# Assuming we have more methods - not developing for
                                 outputpath = config$output_profile$output_path))
   
   output_filename <- list.files(pattern = method )
+  stopCluster(cl)
   
 }
+
 
 # Obtaining the data - For provenance --------------------------------------------
 

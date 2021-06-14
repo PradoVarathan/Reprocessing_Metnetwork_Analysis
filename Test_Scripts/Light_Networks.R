@@ -18,6 +18,8 @@ library(parmigene, quietly = TRUE)
 library(reader, quietly = TRUE)
 library(Rmpi)
 library(bench)
+library(parallel)
+library(doParallel)
 #library(utilityFunctions) -->installation error
 
 # Obtaining the data - From User --------------------------------------------
@@ -50,7 +52,11 @@ data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_
 
 dataFolder <- Folder('Light',parent = config$input_profile$project_id)
 dataFolder <- synStore(dataFolder)
-  
+
+# Registering the parallel clusters
+n_cores <- detectCores()
+cl <- makeCluster(n_cores)
+
 # Performing the analysis -------------------------------------------------
   
 net_methods = c('c3net','mrnet','wgcna')
@@ -66,6 +72,8 @@ if(is.null(config$input_profile$na_fill)){
 }
   
 for (method in net_methods){
+    registerDoParallel(cl)
+
     
   benchMarkRes = mark(switch(method,
          "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?
@@ -99,6 +107,8 @@ for (method in net_methods){
   
 ,check=FALSE)
   setwd(config$input_profile$temp_storage_loc)
+  stopCluster(cl)
+
   benchmark_filename = paste0(method,"_",as.character(req_args$percentage_data),"_Performance.rds")
   saveRDS(benchMarkRes,benchmark_filename)
 

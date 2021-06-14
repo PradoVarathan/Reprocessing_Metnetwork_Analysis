@@ -24,7 +24,9 @@ RUN apt-get update -y\
 && R -e "install.packages('Matrix')" \
 && R -e "install.packages('reader')"\
 && R -e "install.packages('caroline')"\
-&& R -e "install.packages('bench')"
+&& R -e "install.packages('bench')" \
+&& R -e "install.packages('doParallel')"\
+&& R -e "install.packages('parallel')"
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
