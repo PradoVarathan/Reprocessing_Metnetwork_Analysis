@@ -101,7 +101,6 @@ for (method in net_methods){
   
 ,check=FALSE)
   setwd(config$input_profile$temp_storage_loc)
-  stopCluster(cl)
 
   benchmark_filename = paste0(method,"_",as.character(req_args$percentage_data),"_Performance.rds")
   saveRDS(benchMarkRes,benchmark_filename)
