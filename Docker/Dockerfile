@@ -30,8 +30,9 @@ RUN apt-get update -y\
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
+&& mkdir /home/test_res/ \
 && git clone https://github.com/PradoVarathan/metanetwork ~/metanetwork \
-&& mkdir /home/sage/.openmpi \
-&& touch /home/sage/.openmpi/mca-params.conf \
-&& echo "orte_default_hostfile=/home/sage/default_host" >> /home/sage/.openmpi/mca-params.conf \
-&& echo "localhost slots=32" >> /home/sage/default_host 
+&& mkdir /home/test_res/.openmpi \
+&& touch /home/test_res/.openmpi/mca-params.conf \
+&& echo "orte_default_hostfile=/home/test_res/default_host" >> /home/test_res/.openmpi/mca-params.conf \
+&& echo "localhost slots=32" >> /home/test_res/default_host 

@@ -7,7 +7,7 @@ default:
     p_val_c3net: 1
     p_val_mrnet: 1
     p_val_wgcna: 1
-    temp_storage_loc: /home/sage
+    temp_storage_loc: /home/test_res
     rsquaredCut: 0.80
     defaultnaPower: 6
   provenance:
@@ -33,8 +33,8 @@ default:
     activity_name: LightNet_Test
     activity_description: 'Testing light networks with sample simulated data'
   output_profile:
-    output_path: /home/sage/light
-    md5_output_path: /home/sage/Simulation_md5.out
+    output_path: /home/test_res/light
+    md5_output_path: /home/test_res/Simulation_md5.out
     output_name: 'Networks from Simulation data'
     error_path: simulation_error_light
   computing_specs:
