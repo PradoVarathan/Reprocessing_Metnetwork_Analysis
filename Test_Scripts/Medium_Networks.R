@@ -52,10 +52,6 @@ data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_
 dataFolder <- Folder('Medium',parent = config$input_profile$project_id)
 dataFolder <- synStore(dataFolder)
 
-# Registering the parallel clusters
-n_cores <- detectCores()
-cl <- makeCluster(n_cores)
-
 # Performing the analysis -------------------------------------------------
   
 net_methods = c('lassoAIC', 'lassoBIC', 'lassoCV1se', 'lassoCVmin', 'ridgeAIC', 'ridgeBIC', 'ridgeCV1se', 'ridgeCVmin', 'sparrowZ', 'sparrow2Z')
@@ -66,7 +62,6 @@ data = data[1:rows_to_use,1:cols_to_use]
   
 
 for (method in net_methods){
-    registerDoParallel(cl)
     
   benchMarkRes = mark(switch(method,
          "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?

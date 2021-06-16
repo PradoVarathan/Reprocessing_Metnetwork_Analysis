@@ -26,7 +26,9 @@ RUN apt-get update -y\
 && R -e "install.packages('caroline')"\
 && R -e "install.packages('bench')" \
 && R -e "install.packages('doParallel')"\
-&& R -e "install.packages('parallel')"
+&& R -e "install.packages('parallel')"\
+&& R -e "install.packages('snow')"\
+&& R -e "devtools::install_github('blogsdon/utilityFunctions')"
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
