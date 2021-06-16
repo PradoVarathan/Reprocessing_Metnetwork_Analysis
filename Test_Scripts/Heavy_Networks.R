@@ -52,10 +52,6 @@ data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_
 dataFolder <- Folder('Heavy',parent = config$input_profile$project_id)
 dataFolder <- synStore(dataFolder)
 
-# Registering the parallel clusters
-n_cores <- detectCores()
-cl <- makeCluster(n_cores)
-
 # Performing the analysis -------------------------------------------------
   
 net_methods = c('genie3','tigress')
@@ -63,7 +59,9 @@ data = reader::reader(data$path)
 rows_to_use = (nrow(data)*req_args$percentage_data)/100
 cols_to_use = (ncol(data)*req_args$percentage_data)/100
 data = data[1:rows_to_use,1:cols_to_use]
-  
+nslaves = config$computing_specs$medium_ncores
+mpi.spawn.Rslaves(nslaves=nslaves,hosts=NULL);
+
 
   
 for (method in net_methods){
@@ -109,3 +107,6 @@ for (method in net_methods){
   file <- synStore(file)
 }
 
+ #mpi.bcast.cmd(q("no"));
+  mpi.close.Rslaves()
+  mpi.quit(save = "no")
