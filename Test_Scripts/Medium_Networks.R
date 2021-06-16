@@ -60,7 +60,7 @@ rows_to_use = (nrow(data)*req_args$percentage_data)/100
 cols_to_use = (ncol(data)*req_args$percentage_data)/100
 data = data[1:rows_to_use,1:cols_to_use]
 nslaves = config$computing_specs$medium_ncores
-mpi.spawn.Rslaves(nslaves=nslaves,hosts=hosts);
+mpi.spawn.Rslaves(nslaves=nslaves,hosts=NULL);
 
 
 for (method in net_methods){
