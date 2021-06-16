@@ -59,15 +59,13 @@ data = reader::reader(data$path)
 rows_to_use = (nrow(data)*req_args$percentage_data)/100
 cols_to_use = (ncol(data)*req_args$percentage_data)/100
 data = data[1:rows_to_use,1:cols_to_use]
-  
+nslaves = config$computing_specs$medium_ncores
+mpi.spawn.Rslaves(nslaves=nslaves,hosts=hosts);
+
 
 for (method in net_methods){
     
   benchMarkRes = mark(switch(method,
-         "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?
-         "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$p_val_mrnet, config$output_profile$output_path),
-         "wgcna" = wgcnaTOM(data, path = NULL, pval = config$input_profile$p_val_wgcna, config$output_profile$output_path, 
-                            config$input_profile$rsquaredcut, config$input_profile$defaultnaPower),
          "lassoAIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
                                  outputpath = config$output_profile$output_path),
          "lassoBIC" = mpiWrapper(data, nodes = config$computing_specs$medium_ncores, pathv = NULL, regressionFunction = method,
@@ -102,4 +100,8 @@ for (method in net_methods){
   file <- File(path = benchmark_filename, parent = dataFolder)
   file <- synStore(file)
 }
+
+  #mpi.bcast.cmd(q("no"));
+  mpi.close.Rslaves()
+  mpi.quit(save = "no")
 
