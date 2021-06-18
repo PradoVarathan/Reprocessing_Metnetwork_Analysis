@@ -28,7 +28,7 @@ RUN apt-get update -y\
 && R -e "install.packages('doParallel')"\
 && R -e "install.packages('parallel')"\
 && R -e "install.packages('snow')"\
-&& R -e "devtools::install_github('blogsdon/utilityFunctions')"
+&& R -e "devtools::install_github('blogsdon/utilityFunctions')" 
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
@@ -38,3 +38,8 @@ RUN mkdir ~/metanetwork \
 && touch /home/test_res/.openmpi/mca-params.conf \
 && echo "orte_default_hostfile=/home/test_res/default_host" >> /home/test_res/.openmpi/mca-params.conf \
 && echo "localhost slots=32" >> /home/test_res/default_host 
+
+FROM python:3.8-slim-buster
+
+RUN pip install --upgrade synapseclient\
+&& pip install argparse
