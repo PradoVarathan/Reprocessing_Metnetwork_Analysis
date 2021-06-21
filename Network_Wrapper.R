@@ -48,9 +48,14 @@ synID_input = config$input_profile$input_synid
 data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_loc)
 
 # Registering the parallel clusters
-n_cores <- detectCores()
-cl <- makeCluster(n_cores)
-
+if(!is.na(config$computing_specs$medium_ncores)){
+  nslaves = config$computing_specs$medium_ncores
+  mpi.spawn.Rslaves(nslaves=nslaves,hosts=NULL);
+}
+if(!is.na(config$computing_specs$heavy_ncores)){
+  nslaves = config$computing_specs$heavy_ncores
+  mpi.spawn.Rslaves(nslaves=nslaves,hosts=NULL);
+}
 
 # Performing the analysis -------------------------------------------------
 
@@ -65,7 +70,6 @@ if(is.null(config$input_profile$na_fill)){
 
 for (method in net_methods){# Assuming we have more methods - not developing for now
 
-  registerDoParallel(cl)
   switch(method,
          "c3net" = c3netWrapper(data, path = NULL, pval = config$input_profile$p_val_c3net, config$output_profile$output_path),# What does this path define in main function?
          "mrnet" = mrnetWrapper(data, path = NULL, pval = config$input_profile$p_val_mrnet, config$output_profile$output_path),
@@ -97,10 +101,11 @@ for (method in net_methods){# Assuming we have more methods - not developing for
                                 outputpath = config$output_profile$output_path))
   
   output_filename <- list.files(pattern = method )
-  stopCluster(cl)
+  
   
 }
-
+  mpi.close.Rslaves()
+  mpi.quit(save = "no")
 
 # Obtaining the data - For provenance --------------------------------------------
 
