@@ -104,8 +104,11 @@ for (method in net_methods){# Assuming we have more methods - not developing for
   
   
 }
+if((!is.na(config$computing_specs$heavy_ncores)) || (!is.na(config$computing_specs$medium_ncores))){
   mpi.close.Rslaves()
   mpi.quit(save = "no")
+}
+  
 
 # Obtaining the data - For provenance --------------------------------------------
 
