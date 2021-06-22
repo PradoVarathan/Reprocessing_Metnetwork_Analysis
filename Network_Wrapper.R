@@ -106,7 +106,6 @@ for (method in net_methods){# Assuming we have more methods - not developing for
 }
 if((!is.na(config$computing_specs$heavy_ncores)) || (!is.na(config$computing_specs$medium_ncores))){
   mpi.close.Rslaves()
-  mpi.quit(save = "no")
 }
   
 
@@ -171,3 +170,7 @@ synapser::synSetAnnotations(ENRICH_OBJ, annotations = all.annotations)
 md5Command <- paste0('md5sum ', output_filename[length(output_filename)])
 md5 <- strsplit(system(md5Command, intern = TRUE), '  ')[[1]][1]
 cat(md5, '\n', file = config$output_profile$md5_output_path, sep = '')
+
+if((!is.na(config$computing_specs$heavy_ncores)) || (!is.na(config$computing_specs$medium_ncores))){
+  mpi.quit(save = "no")
+}
