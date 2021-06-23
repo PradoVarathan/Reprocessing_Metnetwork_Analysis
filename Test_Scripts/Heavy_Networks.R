@@ -65,7 +65,6 @@ mpi.spawn.Rslaves(nslaves=nslaves,hosts=NULL);
 
   
 for (method in net_methods){
-    registerDoParallel(cl)
 
   benchMarkRes = mark(switch(method,
          "genie3" = mpiWrapper(data, nodes = config$computing_specs$heavy_ncores, pathv = NULL, regressionFunction = method,
