@@ -28,7 +28,8 @@ RUN apt-get update -y\
 && R -e "install.packages('doParallel')"\
 && R -e "install.packages('parallel')"\
 && R -e "install.packages('snow')"\
-&& R -e "devtools::install_github('blogsdon/utilityFunctions')" 
+&& R -e "devtools::install_github('blogsdon/utilityFunctions')" \
+&& R -e "install.packages('bit64')"
 
 RUN mkdir ~/metanetwork \
 && mkdir ~/Analysis_Scripts \
