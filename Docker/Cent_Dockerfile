@@ -1,0 +1,33 @@
+ARG BASE_IMAGE=rstudio/r-base
+FROM ${BASE_IMAGE}:centos7
+
+ARG R_VERSION=3.6.3
+ARG OS_IDENTIFIER=centos-7
+
+# Install R
+RUN wget https://cdn.rstudio.com/r/${OS_IDENTIFIER}/pkgs/R-${R_VERSION}-1-1.x86_64.rpm && \
+    yum -y install epel-release && \
+    yum -y install ./R-${R_VERSION}-1-1.x86_64.rpm && \
+    ln -s /opt/R/${R_VERSION}/bin/R /usr/bin/R && \
+    ln -s /opt/R/${R_VERSION}/bin/Rscript /usr/bin/Rscript && \
+    ln -s /opt/R/${R_VERSION}/lib/R /usr/lib/R && \
+    rm R-${R_VERSION}-1-1.x86_64.rpm && \
+    yum -y remove epel-release && \
+    yum clean all
+
+RUN cd ~ && \
+    sudo yum update -y && \
+    echo "export PS1=\"\n\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;38m\]\u\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;15m\]@\h[\[$(tput sgr0)\]\[\033[38;5;214m\]\W\[$(tput sgr0)\]\[\033[38;5;15m\]]: \[$(tput sgr0)\]\"" >> ~/.bashrc && \
+    . ~/.bashrc && \
+    mkdir /shared && \
+    mkdir /shared/rlibs && \
+    sudo chown root /shared/rlibs && \
+    sudo yum install -y openmpi && \
+    sudo yum install -y openmpi-devel && \
+    sudo yum install -y git && \
+
+""" Install module package in CentOS """
+
+    module load mpi/openmpi-x86_64 && \
+    sh ~/r_provisioner.sh && \
+    Rscript -e 'install.packages(c("bit64", "parmigene", "c3net", "ROCR", "Matrix", "glasso", "utility", "reader"))' && \
