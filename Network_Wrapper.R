@@ -108,7 +108,7 @@ if(config$computing_specs$heavy_ncores>0){
   mpi.close.Rslaves()
 }
 
-if(config$computing_specs$medium_ncores>0)){
+if(config$computing_specs$medium_ncores>0){
   mpi.close.Rslaves()
 }
   
