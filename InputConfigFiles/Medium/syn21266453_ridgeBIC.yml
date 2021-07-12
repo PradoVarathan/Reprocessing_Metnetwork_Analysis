@@ -1,6 +1,6 @@
 default:
   input_profile:
-    input_synid: syn21266453
+    input_synid: syn21266454
     project_id: syn25953317
     network_method: ["ridgeBIC"]
     na_fill: NULL
@@ -30,13 +30,13 @@ default:
         ref: branch
         ref_name: main
         repository_path: Network_Wrapper.R
-    activity_name: ridgeBIC_syn21266453
-    activity_description: 'Using the ridgeBIC to prepare network from syn21266453 data'
+    activity_name: ridgeBIC_syn21266454
+    activity_description: 'Using the ridgeBIC to prepare network from syn21266454 data'
   output_profile:
-    output_path: syn21266453_ridgeBIC
-    md5_output_path: syn21266453_ridgeBICmd5.out
-    output_name: 'syn21266453_ridgeBIC Network '
-    error_path: syn21266453_ridgeBIC_err
+    output_path: syn21266454_ridgeBIC
+    md5_output_path: syn21266454_ridgeBICmd5.out
+    output_name: 'syn21266454_ridgeBIC Network '
+    error_path: syn21266454_ridgeBIC_err
   computing_specs:
     light_ncores: 32
     medium_ncores: 32

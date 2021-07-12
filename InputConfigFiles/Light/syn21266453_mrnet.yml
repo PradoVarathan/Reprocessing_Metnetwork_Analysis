@@ -1,6 +1,6 @@
 default:
   input_profile:
-    input_synid: syn21266453
+    input_synid: syn21266454
     project_id: syn25953317
     network_method: ["mrnet"]
     na_fill: NULL
@@ -30,13 +30,13 @@ default:
         ref: branch
         ref_name: main
         repository_path: Network_Wrapper.R
-    activity_name: mrnet_syn21266453
-    activity_description: 'Using the mrnet to prepare network from syn21266453 data'
+    activity_name: mrnet_syn21266454
+    activity_description: 'Using the mrnet to prepare network from syn21266454 data'
   output_profile:
-    output_path: syn21266453_mrnet
-    md5_output_path: syn21266453_mrnetmd5.out
-    output_name: 'syn21266453_mrnet Network '
-    error_path: syn21266453_mrnet_err
+    output_path: syn21266454_mrnet
+    md5_output_path: syn21266454_mrnetmd5.out
+    output_name: 'syn21266454_mrnet Network '
+    error_path: syn21266454_mrnet_err
   computing_specs:
     light_ncores: 32
     medium_ncores: 0

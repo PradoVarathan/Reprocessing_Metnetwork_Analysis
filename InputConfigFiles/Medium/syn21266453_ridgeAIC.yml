@@ -1,6 +1,6 @@
 default:
   input_profile:
-    input_synid: syn21266453
+    input_synid: syn21266454
     project_id: syn25953317
     network_method: ["ridgeAIC"]
     na_fill: NULL
@@ -30,13 +30,13 @@ default:
         ref: branch
         ref_name: main
         repository_path: Network_Wrapper.R
-    activity_name: ridgeAIC_syn21266453
-    activity_description: 'Using the ridgeAIC to prepare network from syn21266453 data'
+    activity_name: ridgeAIC_syn21266454
+    activity_description: 'Using the ridgeAIC to prepare network from syn21266454 data'
   output_profile:
-    output_path: syn21266453_ridgeAIC
-    md5_output_path: syn21266453_ridgeAICmd5.out
-    output_name: 'syn21266453_ridgeAIC Network '
-    error_path: syn21266453_ridgeAIC_err
+    output_path: syn21266454_ridgeAIC
+    md5_output_path: syn21266454_ridgeAICmd5.out
+    output_name: 'syn21266454_ridgeAIC Network '
+    error_path: syn21266454_ridgeAIC_err
   computing_specs:
     light_ncores: 32
     medium_ncores: 32

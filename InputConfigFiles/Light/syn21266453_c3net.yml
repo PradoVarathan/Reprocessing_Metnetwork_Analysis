@@ -1,6 +1,6 @@
 default:
   input_profile:
-    input_synid: syn21266453
+    input_synid: syn21266454
     project_id: syn25953317
     network_method: ["c3net"]
     na_fill: NULL
@@ -30,13 +30,13 @@ default:
         ref: branch
         ref_name: main
         repository_path: Network_Wrapper.R
-    activity_name: c3net_syn21266453
-    activity_description: 'Using the c3net to prepare network from syn21266453 data'
+    activity_name: c3net_syn21266454
+    activity_description: 'Using the c3net to prepare network from syn21266454 data'
   output_profile:
-    output_path: syn21266453_c3net
-    md5_output_path: syn21266453_c3netmd5.out
-    output_name: 'syn21266453_c3net Network '
-    error_path: syn21266453_c3net_err
+    output_path: syn21266454_c3net
+    md5_output_path: syn21266454_c3netmd5.out
+    output_name: 'syn21266454_c3net Network '
+    error_path: syn21266454_c3net_err
   computing_specs:
     light_ncores: 32
     medium_ncores: 0

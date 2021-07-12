@@ -1,6 +1,6 @@
 default:
   input_profile:
-    input_synid: syn21266453
+    input_synid: syn21266454
     project_id: syn25953317
     network_method: ["wgcna"]
     na_fill: NULL
@@ -30,13 +30,13 @@ default:
         ref: branch
         ref_name: main
         repository_path: Network_Wrapper.R
-    activity_name: wgcna_syn21266453
-    activity_description: 'Using the wgcna to prepare network from syn21266453 data'
+    activity_name: wgcna_syn21266454
+    activity_description: 'Using the wgcna to prepare network from syn21266454 data'
   output_profile:
-    output_path: syn21266453_wgcna
-    md5_output_path: syn21266453_wgcnamd5.out
-    output_name: 'syn21266453_wgcna Network '
-    error_path: syn21266453_wgcna_err
+    output_path: syn21266454_wgcna
+    md5_output_path: syn21266454_wgcnamd5.out
+    output_name: 'syn21266454_wgcna Network '
+    error_path: syn21266454_wgcna_err
   computing_specs:
     light_ncores: 32
     medium_ncores: 0
