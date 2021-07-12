@@ -48,11 +48,11 @@ synID_input = config$input_profile$input_synid
 data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_loc)
 
 # Registering the parallel clusters
-if(config$computing_specs$medium_ncores!= NA){
+if(config$computing_specs$medium_ncores>0){
   nslaves = config$computing_specs$medium_ncores
   mpi.spawn.Rslaves(nslaves=nslaves,hosts=NULL);
 }
-if(config$computing_specs$heavy_ncores != NA){
+if(config$computing_specs$heavy_ncores>0){
   nslaves = config$computing_specs$heavy_ncores
   mpi.spawn.Rslaves(nslaves=nslaves,hosts=NULL);
 }
@@ -104,7 +104,7 @@ for (method in net_methods){# Assuming we have more methods - not developing for
   
   
 }
-if(config$computing_specs$heavy_ncores!=NA) || (config$computing_specs$medium_ncores!=NA)){
+if(config$computing_specs$heavy_ncores>0) || (config$computing_specs$medium_ncores>0)){
   mpi.close.Rslaves()
 }
   
