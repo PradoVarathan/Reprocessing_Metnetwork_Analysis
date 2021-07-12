@@ -39,5 +39,5 @@ default:
     error_path: syn21266453_mrnet_err
   computing_specs:
     light_ncores: 32
-    medium_ncores: 32
-    heavy_ncores: 32
+    medium_ncores: NA
+    heavy_ncores: NA
