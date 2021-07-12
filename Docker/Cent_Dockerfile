@@ -25,9 +25,38 @@ RUN cd ~ && \
     sudo yum install -y openmpi && \
     sudo yum install -y openmpi-devel && \
     sudo yum install -y git && \
-
-""" Install module package in CentOS """
-
+    sudo yum install -y nano && \
+    sudo yum -y install libcurl libcurl-devel && \
+    sudo yum -y install openssl-devel && \
+    sudo yum -y install libxml2-devel && \
+    sudo yum install -y libpng-devel && \
+    sudo yum install -y libjpeg-turbo-devel
+    
+RUN echo "local({r <- getOption('repos') \nr['CRAN'] <- 'http://cran.r-project.org' \noptions(repos=r)})" >> /opt/R/3.6.3/lib/R/etc/Rprofile.site \
+    && R -e "install.packages('BiocManager')"\
+    && R -e "install.packages('dplyr')"\
+    && R -e "install.packages('glmnet')"\
+    && R -e "install.packages('randomForest')"\
+    && R -e "install.packages('Hmisc')"\
+    && R -e "install.packages('lars')"\
+    && R -e "BiocManager::install('WGCNA')"\ 
+    && R -e "install.packages('devtools')\
+    && R -e "install.packages('synapser', repos=c('http://ran.synapse.org', 'http://cran.fhcrc.org'))"\
+    && R -e "devtools::install_github('PradoVarathan/metanetwork')"\
+    && R -e "devtools::install_github('brian-bot/githubr')"\
+    && R -e "install.packages('c3net')"\
+    && R -e "install.packages('config')"\
+    && R -e "install.packages('optparse')"\
+    && R -e "install.packages('parmigene')"\
+    && R -e "install.packages('data.table')"\
+    && R -e "install.packages('Rmpi')"\
+    && R -e "install.packages('Matrix')" \
+    && R -e "install.packages('reader')"\
+    && R -e "install.packages('caroline')"\
+    && R -e "install.packages('bench')" \
+    && R -e "install.packages('doParallel')"\
+    && R -e "install.packages('parallel')"\
+    && R -e "install.packages('snow')"\
+    && R -e "devtools::install_github('blogsdon/utilityFunctions')" \
+    && R -e "install.packages('bit64')"
     module load mpi/openmpi-x86_64 && \
-    sh ~/r_provisioner.sh && \
-    Rscript -e 'install.packages(c("bit64", "parmigene", "c3net", "ROCR", "Matrix", "glasso", "utility", "reader"))' && \

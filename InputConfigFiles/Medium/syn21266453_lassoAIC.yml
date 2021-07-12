@@ -38,6 +38,6 @@ default:
     output_name: 'syn21266453_lassoAIC Network '
     error_path: syn21266453_lassoAIC_err
   computing_specs:
-    light_ncores: 32
+    light_ncores: 0
     medium_ncores: 32
-    heavy_ncores: 32
+    heavy_ncores: 0
