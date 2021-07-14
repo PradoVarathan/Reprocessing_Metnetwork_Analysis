@@ -13,6 +13,7 @@ RUN wget https://cdn.rstudio.com/r/${OS_IDENTIFIER}/pkgs/R-${R_VERSION}-1-1.x86_
     ln -s /opt/R/${R_VERSION}/lib/R /usr/lib/R && \
     rm R-${R_VERSION}-1-1.x86_64.rpm && \
     yum -y remove epel-release && \
+    yum install -y curl && \
     yum clean all
 
 RUN cd ~ && \
@@ -34,42 +35,46 @@ RUN cd ~ && \
     sudo yum -y groupinstall 'Development Tools' && \
     sudo yum -y install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel 
 
+RUN curl -LJO https://github.com/cea-hpc/modules/releases/download/v4.7.1/modules-4.7.1.tar.gz && \
+    tar xfz modules-4.7.1.tar.gz && \
+    cd modules-4.7.1 && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ~/ 
+
 RUN echo "local({r <- getOption('repos') \nr['CRAN'] <- 'http://cran.r-project.org' \noptions(repos=r)})" >> /opt/R/3.6.3/lib/R/etc/Rprofile.site \
-    && R -e "install.packages('BiocManager')"\
-    && R -e "install.packages('dplyr')"\
-    && R -e "install.packages('glmnet')"\
-    && R -e "install.packages('randomForest')"\
-    && R -e "install.packages('Hmisc')"\
-    && R -e "install.packages('lars')"\
-    && R -e "BiocManager::install('WGCNA')"\ 
-    && R -e "install.packages('devtools')\
-    && R -e "install.packages('synapser', repos=c('http://ran.synapse.org', 'http://cran.fhcrc.org'))"\
-    && R -e "devtools::install_github('PradoVarathan/metanetwork')"\
-    && R -e "devtools::install_github('brian-bot/githubr')"\
-    && R -e "install.packages('c3net')"\
-    && R -e "install.packages('config')"\
-    && R -e "install.packages('optparse')"\
-    && R -e "install.packages('parmigene')"\
-    && R -e "install.packages('data.table')"\
-    && R -e "install.packages('Rmpi')"\
-    && R -e "install.packages('Matrix')" \
-    && R -e "install.packages('reader')"\
-    && R -e "install.packages('caroline')"\
-    && R -e "install.packages('bench')" \
-    && R -e "install.packages('doParallel')"\
-    && R -e "install.packages('parallel')"\
-    && R -e "install.packages('snow')"\
-    && R -e "devtools::install_github('blogsdon/utilityFunctions')" \
-    && R -e "install.packages('bit64')" \
-    && module load mpi/openmpi-x86_64  \
-    && mkdir /shared/rlibs \
-    && Rscript -e 'install.packages(c("docopt", "devtools", "dplyr", "tidyr", "ggplot2", "reshape2", "knitr", "stringr", "readr", "plyr", "data.table", "rJava", "doParallel", "snow", "igraph", "Rcpp", "RcppEigen", "Rclusterpp", "RColorBrewer", "MRCE", "vbsr", "ctv", "psych", "reshape2", "vcd", "erer", "fpc", "pacman"))'\
-    && Rscript -e 'install.packages(c("RJSONIO", "RCurl", "digest")); source("http://depot.sagebase.org/CRAN.R"); pkgInstall(c("synapseClient"))' \
-    && Rscript -e 'source("http://www.bioconductor.org/biocLite.R") ; biocLite(c("limma", "biovizBase", "e1071", "org.Hs.eg.db", "edgeR", "AnnotationDbi", "biomaRt", "ComplexHeatmap", "FDb.InfiniumMethylation.hg19", "RDAVIDWebService", "topGO", "goseq", "GO.db", "GSVA", "org.Hs.eg.db", "edgeR", "limma", "CePa", "Biobase", "pracma", "annotate", "BiocInstaller", "Biostrings", "GEOquery", "GOstats", "graph", "GSEABase", "impute", "preprocessCore"))'\
-    && Rscript -e 'library(devtools); install_github("th1vairam/CovariateAnalysis@dev")'\
-    && export LD_LIBRARY_PATH=/usr/lib64/openmpi-1.10/lib:$LD_LIBRARY_PATH \
+   
+    RUN R -e "install.packages('BiocManager')"  
+    RUN R -e "install.packages('dplyr')"  
+    RUN R -e "install.packages('glmnet')"  
+    RUN R -e "install.packages('randomForest')"  
+    RUN R -e "install.packages('Hmisc')"  
+    RUN R -e "install.packages('lars')"  
+    RUN R -e "BiocManager::install('WGCNA')"   
+    RUN R -e "install.packages('devtools')"  
+    RUN R -e "install.packages('synapser', repos=c('http://ran.synapse.org', 'http://cran.fhcrc.org'))"  
+    RUN R -e "devtools::install_github('PradoVarathan/metanetwork')"  
+    RUN R -e "devtools::install_github('brian-bot/githubr')"  
+    RUN R -e "install.packages('c3net')"  
+    RUN R -e "install.packages('config')"  
+    RUN R -e "install.packages('optparse')"  
+    RUN R -e "install.packages('parmigene')"  
+    RUN R -e "install.packages('data.table')"  
+    RUN R -e "install.packages('Rmpi',configure.args = paste("--with-Rmpi-include=/usr/include/openmpi-86_64", "--with-Rmpi-libpath=/usr/lib64/openmpi/lib", "--with-Rmpi-type=OPENMPI")))"  
+    RUN R -e "install.packages('Matrix')"   
+    RUN R -e "install.packages('reader')"  
+    RUN R -e "install.packages('caroline')"  
+    RUN R -e "install.packages('bench')"   
+    RUN R -e "install.packages('doParallel')"  
+    RUN R -e "install.packages('parallel')"  
+    RUN R -e "install.packages('snow')"  
+    RUN R -e "devtools::install_github('blogsdon/utilityFunctions')"   
+    RUN R -e "install.packages('bit64')"
+
+    RUN export LD_LIBRARY_PATH=/usr/lib64/openmpi-1.10/lib:$LD_LIBRARY_PATH \
     && Rscript -e 'install.packages("Rmpi", configure.args = paste("--with-Rmpi-include=/usr/include/openmpi-x86_64","--with-Rmpi-libpath=/usr/lib64/openmpi/lib","--with-Rmpi-type=OPENMPI"))'\
-    && Rscript -e 'install.packages("idr"))'
+    && Rscript -e 'install.packages("idr")'
 
 RUN mkdir ~/metanetwork \
     && mkdir ~/Analysis_Scripts \
