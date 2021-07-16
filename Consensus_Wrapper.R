@@ -38,49 +38,73 @@ synLogin(email = req_args$synapse_user, password = req_args$synapse_pass)
 project = Project(config$input_profile$project_id)
 project <- synStore(project)
 
-buildConsensus = function(outputpath,networkFolderId, fileName){
 
-  #get all networks from Synapse
-  foo <- synGet(paste0('select name,id from file where parentId==\'',networkFolderId,'\''))
-  foo <- dplyr::filter(foo,file.name!='bicNetworks.rda' & file.name!='rankConsensusNetwork.csv')
-  bar <- lapply(foo$file.id,synGet,downloadLocation=outputpath)
 
-  loadNetwork <- function(file){
-    sparrowNetwork <- data.table::fread(file,stringsAsFactors=FALSE,data.table=F)
-    rownames(sparrowNetwork) <- sparrowNetwork$V1
-    sparrowNetwork <- sparrowNetwork[,-1]
-    gc()
-    return(sparrowNetwork)
-  }
+buildConsensus(outputpath = ,networkFolderId = ,pattern_id = )
 
-  networkFiles <- sapply(bar,function(x){return(x@filePath)})
-  networks <- lapply(networkFiles,loadNetwork)
-  networks <- lapply(networks,data.matrix)
 
-  networks$rankConsensus <- metanetwork::rankConsensus(networks)
-  cat('built rank consensus\n')
-  cat('write rank consensus\n')
-  write.csv(networks$rankConsensus,file=paste0(outputpath,'rankConsensusNetwork.csv'),quote=F)
-  if(!is.null(fileName)){
-    library(Matrix)
-    networkMethods <- sapply(bar,synGetAnnotation,which='method')
-    cat('grabbed methods\n')
-    #build rank consensus
-    cat('updated methods\n')
-    networkMethods <- c(networkMethods,'rankConsensus')
-    cat('reading in data\n')
-    options(stringsAsFactors = F)
-    dataSet <- reader(fileName, row.names=1)
-    cat('turning data into data matrix\n')
-    dataSet <- data.matrix(dataSet)
-    cat('build bicNetworks\n')
-    #bicNetworks <- lapply(networks,metanetwork::computeBICcurve,dataSet,maxEdges=1e5)
-    bicNetworks <- metanetwork::computeBICcurve(networks$rankConsensus,dataSet,maxEdges=2e5)
-    #cat('make names of bicNetworks\n')
-    #names(bicNetworks) <- 'rankConsensus'
-    cat('save bicNetworks\n')
-    save(bicNetworks,file=paste0(outputpath,'bicNetworks.rda'))
-  }
+# Obtaining the data - For provenance --------------------------------------------
 
+activity <- synapser::synGet(config$input_profile$project_id)
+
+dataFolder <- Folder(method,parent = config$input_profile$project_id)
+dataFolder <- synStore(dataFolder)
+for (filePath in output_filename){
+  file <- File(path = filePath, parent = dataFolder)
+  file <- synStore(file)
 }
-buildConsensus(outputpath,networkFolderId,fileName)
+
+all.annotations <- list(
+  dataType = config$provenance$annotations$data_type,
+  resourceType = config$provenance$annotations$resuorce_type,
+  metadataType = config$provenance$annotations$metadata_type,
+  isModelSystem = config$provenance$annotations$ismodelsystem,
+  isMultiSpecimen = config$provenance$annotations$ismultispecimen,
+  fileFormat = config$provenance$annotations$fileformat,
+  grant = config$provenance$annotations$grant,
+  species = config$provenance$annotations$species,
+  organ = config$provenance$annotations$organ,
+  tissue = config$provenance$annotations$tissue,
+  study = config$provenance$annotations$study, 
+  consortium = config$provenance$annotations$consortium,
+  assay = config$provenance$annotations$assay
+)
+
+thisRepo = NULL
+thisFile = NULL
+
+try(
+  thisRepo <- githubr::getRepo(
+    repository = config$provenance$code_annotations$repository,
+    ref = config$provenance$code_annotations$ref,
+    refName = config$provenance$code_annotations$ref_name
+  ), silent = TRUE
+)
+try(
+  thisFile <- githubr::getPermlink(
+    repository = thisRepo,
+    repositoryPath = config$provenance$code_annotations$repository_path
+  ), silent = TRUE
+)
+
+ENRICH_OBJ <- synapser::synStore( synapser::File( 
+  path = output_filename[length(output_filename)],
+  name = config$output_profile$output_name,
+  parentId = activity$properties$id),
+  used = config$input_profile$input_synid,
+  activityName = config$provenance$activity_name,
+  executed = thisFile,
+  activityDescription = config$provenance$activity_description
+)
+
+synapser::synSetAnnotations(ENRICH_OBJ, annotations = all.annotations)
+
+# Formatting the network to md5 format --------------------------------------------
+
+md5Command <- paste0('md5sum ', output_filename[length(output_filename)])
+md5 <- strsplit(system(md5Command, intern = TRUE), '  ')[[1]][1]
+cat(md5, '\n', file = config$output_profile$md5_output_path, sep = '')
+
+if((!is.na(config$computing_specs$heavy_ncores)) || (!is.na(config$computing_specs$medium_ncores))){
+  mpi.quit(save = "no")
+}
