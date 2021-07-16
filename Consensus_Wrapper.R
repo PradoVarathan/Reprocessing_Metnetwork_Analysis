@@ -22,7 +22,7 @@ option_list <- list(make_option(c("-u","--synapse_user"), type="character", acti
                                 help = "Synapse User name"),
                     make_option(c("-p","--synapse_pass"), type="character", action = "store",
                                 help = "Synapse User Password"),
-                    make_option(c("-p","--config_file"), type="character", action = "store",
+                    make_option(c("-c","--config_file"), type="character", action = "store",
                                 help = "Path to the complete config file"))          
 req_args <- parse_args(OptionParser(option_list=option_list))
 
@@ -31,7 +31,7 @@ req_args <- parse_args(OptionParser(option_list=option_list))
 
 #Setting up the cofig file 
 Sys.setenv(R_CONFIG_ACTIVE = "default")
-config <- config::get(file = option_list$config_file)
+config <- config::get(file = req_args$config_file)
 
 #Linking with Project
 synLogin(email = req_args$synapse_user, password = req_args$synapse_pass)
