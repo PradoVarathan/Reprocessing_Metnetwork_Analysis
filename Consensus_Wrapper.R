@@ -39,8 +39,10 @@ project = Project(config$input_profile$project_id)
 project <- synStore(project)
 
 
-
-buildConsensus(outputpath = ,networkFolderId = ,pattern_id = )
+outputpath = config$input_profile$temp_storage_loc
+networkFolderId = config$input_profile$input_folderid
+pattern_id = config$input_profile$pattern_id
+buildConsensus(outputpath = outputpath,networkFolderId = networkFolderId,pattern_id = pattern_id)
 
 
 # Obtaining the data - For provenance --------------------------------------------
@@ -49,10 +51,9 @@ activity <- synapser::synGet(config$input_profile$project_id)
 
 dataFolder <- Folder(method,parent = config$input_profile$project_id)
 dataFolder <- synStore(dataFolder)
-for (filePath in output_filename){
-  file <- File(path = filePath, parent = dataFolder)
-  file <- synStore(file)
-}
+
+file <- File(path = paste0(outputpath,'rankConsensusNetwork.csv'), parent = dataFolder)
+file <- synStore(file)
 
 all.annotations <- list(
   dataType = config$provenance$annotations$data_type,
