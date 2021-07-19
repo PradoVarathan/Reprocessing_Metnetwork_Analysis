@@ -2,8 +2,9 @@ default:
   input_profile:
     input_folderid: syn25953317
     project_id: syn25953317
-    pattern_id: syn21266454
+    input_proj_id: syn21266454
     temp_storage_loc: /home/sage
+    temp_input_loc: /home
   provenance:
     annotations:
       data_type: ['clinical','geneExpression']
