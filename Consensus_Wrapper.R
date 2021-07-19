@@ -15,7 +15,7 @@ library(optparse, quietly = TRUE)
 library(data.table, quietly = TRUE)
 library(parmigene, quietly = TRUE)
 library(WGCNA, quietly = TRUE)
-
+library(reader, quietly = TRUE)
 # Obtaining the data - From User --------------------------------------------
 
 option_list <- list(make_option(c("-u","--synapse_user"), type="character", action = "store",
