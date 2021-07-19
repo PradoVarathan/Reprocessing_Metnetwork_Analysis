@@ -51,7 +51,7 @@ buildConsensus(outputpath = outputpath,networkFolderId = networkFolderId,pattern
 
 activity <- synapser::synGet(config$input_profile$project_id)
 
-dataFolder <- Folder(method,parent = config$input_profile$project_id)
+dataFolder <- Folder('Consensus',parent = config$input_profile$project_id)
 dataFolder <- synStore(dataFolder)
 
 file <- File(path = paste0(outputpath,'rankConsensusNetwork.csv'), parent = dataFolder)
@@ -91,8 +91,8 @@ try(
 )
 
 ENRICH_OBJ <- synapser::synStore( synapser::File( 
-  path = output_filename[length(output_filename)],
-  name = config$output_profile$output_name,
+  path = paste0(outputpath,'rankConsensusNetwork.csv'),
+  name = 'RankConsensusNetwork',
   parentId = activity$properties$id),
   used = config$input_profile$input_synid,
   activityName = config$provenance$activity_name,
@@ -104,7 +104,7 @@ synapser::synSetAnnotations(ENRICH_OBJ, annotations = all.annotations)
 
 # Formatting the network to md5 format --------------------------------------------
 
-md5Command <- paste0('md5sum ', output_filename[length(output_filename)])
+md5Command <- paste0('md5sum ', paste0(outputpath,'rankConsensusNetwork.csv'))
 md5 <- strsplit(system(md5Command, intern = TRUE), '  ')[[1]][1]
 cat(md5, '\n', file = config$output_profile$md5_output_path, sep = '')
 
