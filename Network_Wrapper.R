@@ -62,10 +62,11 @@ if(config$computing_specs$heavy_ncores>0){
 net_methods = config$input_profile$network_method
 data = reader::reader(data$path)
 
-if(is.null(config$input_profile$na_fill)){
-  data <- metanetwork::winsorizeData(data)
-}else{
-  data[is.na(data)] <- config$input_profile$na_fill # Ideally, user could insert a large negative number or use min(data)
+if (config$input_profile$na_fill == 'Winsorize'){
+    data <- metanetwork::winsorizeData(data)
+}
+else if (is.null(config$input_profile$na_fill)){
+  print('Data not normalized for missing values. Ignore if using mrnet method.')
 }
 
 for (method in net_methods){# Assuming we have more methods - not developing for now
