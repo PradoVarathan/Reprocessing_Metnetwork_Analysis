@@ -57,21 +57,35 @@ dataFolder <- synStore(dataFolder)
 file <- File(path = paste0(outputpath,'rankConsensusNetwork.csv'), parent = dataFolder)
 file <- synStore(file)
 
-all.annotations <- list(
-  dataType = config$provenance$annotations$data_type,
-  resourceType = config$provenance$annotations$resuorce_type,
-  metadataType = config$provenance$annotations$metadata_type,
-  isModelSystem = config$provenance$annotations$ismodelsystem,
-  isMultiSpecimen = config$provenance$annotations$ismultispecimen,
-  fileFormat = config$provenance$annotations$fileformat,
-  grant = config$provenance$annotations$grant,
-  species = config$provenance$annotations$species,
-  organ = config$provenance$annotations$organ,
-  tissue = config$provenance$annotations$tissue,
-  study = config$provenance$annotations$study, 
-  consortium = config$provenance$annotations$consortium,
-  assay = config$provenance$annotations$assay
-)
+all.annotations <- synGetAnnotations(config$input_profile$input_synid)
+
+checkAnnotations <- function(annotations, config){
+  annot_default <- list(
+    dataType = NULL,
+    resourceType = NULL,
+    metadataType = NULL,
+    isModelSystem = NULL,
+    isMultiSpecimen = NULL,
+    fileFormat = NULL,
+    grant = NULL,
+    species = NULL,
+    organ = NULL,
+    tissue = NULL,
+    study = NULL, 
+    consortium = NULL,
+    assay = NULL
+  )
+  for (item in names(annot_default)){
+    if (!is.null(config$provenance$annotations$item)){
+      annot_default$item = config$provenance$annotations$item[[1]]
+    }
+    else if (!is.null(annotations$item)){
+      annot_default$item = annotations$item[[1]]
+    }
+  }
+}
+
+all.annotations <- checkAnnotations(all.annotations,config)
 
 thisRepo = NULL
 thisFile = NULL
