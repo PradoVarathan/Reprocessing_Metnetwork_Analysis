@@ -56,7 +56,8 @@ dataFolder <- synStore(dataFolder)
 
 file <- File(path = paste0(outputpath,'rankConsensusNetwork.csv'), parent = dataFolder)
 file <- synStore(file)
-
+file2 <- File(path = paste0(outputpath,'bicNetworks.rda'), parent = dataFolder)
+file2 <- synStore(file2)
 all.annotations <- synGetAnnotations(config$input_profile$input_synid)
 
 checkAnnotations <- function(annotations, config){
