@@ -90,6 +90,15 @@ function [nodes_and_partition_identifiers_hard nodes_and_partition_identifiers_o
         return(ARI)
     }
     
+    fast_ind2sub <- function(matsize,idx){
+        nrs <- nrow(matsize)
+        ncs <- ncol(matsize)
+        r = (idx-1%nrows)+1
+        c = ((idx-r)/nrows) + 1
+        res <- c(r,c)
+        return(res)
+        
+    }
     
     for (i in 2:size(partitions,2)){           #make sure partition codes are distinct across partitions
         partitions[,i] <- partitions[,i]+ max(partitions[,i-1])
@@ -171,7 +180,7 @@ function [nodes_and_partition_identifiers_hard nodes_and_partition_identifiers_o
                 }
                 
                 
-                fraction_counts_labels <- vertcat(fraction_counts_labels{:})
+               #fraction_counts_labels <- vertcat(fraction_counts_labels{:})
                 [row col] in fast_ind2sub(size(partitions),vertcat(markerfound{all_labels_for_winning_cluster_unq(:)}))){
                 nodes_x_partitions_coocvals <- sparse(row, col, fraction_counts_labels, size(partitions,1), size(partitions,2))# in nodes_x_partitions_coocvals rows are nodes and columns are partitions, values are mean of co-occurence with all members of a (winning) cluster using data from a non-winning partition
                 nodes_x_partitions_coocvals(winning_partition_idxs,:) <- 0
