@@ -121,19 +121,23 @@ bootstrap_SpeakEasy <- function(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_
     }
     
     ### Take a look into with @Jake
-    # save_results <- 0
-    # if (main_iter==1){
-    #     if (save_results==1){
-    #         disp('saving partitions')
-    #         save record_of_all_partitions.mat ADJ partition_columns partitionID multi_community_switch#sometimes useful for very large networks if you want to save results before consensus clustering, especially if you want to try several multi-community cutoffs
-    #     }
-    # }
+     save_results <- 0
+     if (main_iter==1){
+         if (save_results==1){
+             cat('saving partitions')
+             saveRDS(list(ADJ,partition_columns,partitionID,multi_community_switch),'record_of_all_partitions.RDS')#sometimes useful for very large networks if you want to save results before consensus clustering, especially if you want to try several multi-community cutoffs
+         }
+     }
     
     cat('started consensus clustering', as.character(main_iter))
     
-    virt_res <- virtual_cooccurrence(ADJ,partition_columns,partitionID, main_iter, multi_community_switch)
+    virt_res <- virtual_cooccurrence(ADJ,partition_columns,partitionID_lst, main_iter, multi_community_switch)
     
-    [partition_codes partition_codes_overlapping cell_partition cell_partition_overlapping ]
+    boot_res <- list("partition_codes"= virt_res["nodes_and_partition_identifiers_hard"],
+                     "partition_codes_overlapping" = virt_res["nodes_and_partition_identifiers_overlapping"],
+                     "cell_partition" =virt_res["cell_partition"],
+                     "cell_partition_overlapping" =virt_res["cell_partition_overlapping"])
+    return(boot_res)
 
 }
 

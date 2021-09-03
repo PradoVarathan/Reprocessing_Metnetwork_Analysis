@@ -50,8 +50,7 @@
 #you then need to count the occurences of all other labels for all nodes in
 #a given winning cluster, which is what "fraction_counts_labels" does
 
-
-function [nodes_and_partition_identifiers_hard nodes_and_partition_identifiers_overlapping cell_partition cell_partition_overlapping multicom_nodes_all] <- virtual_cooccurrence(ADJ,partitions,partitionID, main_iter, accept_multi)){
+virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_multi){
     library(pracma)
     
     partitions <- t(as.matrix(partitions))
@@ -91,10 +90,11 @@ function [nodes_and_partition_identifiers_hard nodes_and_partition_identifiers_o
     }
     
     fast_ind2sub <- function(matsize,idx){
+        
         nrs <- nrow(matsize)
         ncs <- ncol(matsize)
-        r = (idx-1%nrows)+1
-        c = ((idx-r)/nrows) + 1
+        r <- mod((idx-1),nrs) + 1
+        c <- ((idx-r)/nrs) + 1
         res <- c(r,c)
         return(res)
         
@@ -138,14 +138,14 @@ function [nodes_and_partition_identifiers_hard nodes_and_partition_identifiers_o
         #markertitle is a list of clusterID's from all partitions
         #markerfound contains the positions of all the clusterID's in the ADJ
         #also, if clusterID==3, all the positions of nodes taked with clusterID==3 are in markerfound{3}
-        sorted_labels <- sortrows(cbind(partitions,t(as.matrix(1:numel(partitions)))))
+        sorted_labels <- sortrows(rbind(partitions,t(as.matrix(1:numel(partitions)))))
         sorted_labels <- as.matrix(sorted_labels)
         transitions=matrix(c(0, which(sorted_labels[2:nrow(sorted_labels),1]-sorted_labels[1:(nrow(sorted_labels)-1),1]!=0),size(sorted_labels,1)))#find sets of locations of the end of the previous label
-        markertitle <- zeros(length(all_partitions_unq),1)#for all clusters, get their locations in the partitions and their numeric identifier
+        markertitle <- zeros(max(dim(sorted_labels)),1)#for all clusters, get their locations in the partitions and their numeric identifier
         markerfound = list()
         for (i in 1:(size(transitions,1)-1)){#puts the ith label in the ith cell of markerfound - remember that labels are unique across partitions
-            markerfound[[i]] <- sorted_labels[(transitions[i]+1:transitions[i+1]),1]#this actually gets very big too
-            markertitle[i,1] <- sorted_labels[(transitions[i]+1),1]
+            markerfound[[i]] <- sorted_labels[c((transitions[i]+1):transitions[i+1]),1]#this actually gets very big too
+            markertitle[i,1] <- sorted_labels[transitions[i]+1,1]
         }
     
         nodes_and_partition_identifiers_overlapping <- list()
@@ -153,6 +153,7 @@ function [nodes_and_partition_identifiers_hard nodes_and_partition_identifiers_o
         mutlicom_node_cell <- list() 
         cell_partition_overlapping <- list() 
         ban_module_size <- 3
+        nodes_x_partitions_coocvals_holder <- list()
         
         banned_modules <- which(lengths(cell_partition) < ban_module_size)#sometimes a node may be half in it's "own cluster" (size one) and in some other, so not really multi-comm
         for (i in 1:length(winning_members_unq)){#for each cluster in winning partition
@@ -165,10 +166,12 @@ function [nodes_and_partition_identifiers_hard nodes_and_partition_identifiers_o
                 countseach <- countseach$cnt
                 
                 fraction_counts_labels <- list()
-                for (j in 1:length(all_labels_for_winning_cluster_unq)){#for all labels that have ever characterized any node in a winning cluster
+                for (j in 1:length(all_labels_for_winning_cluster_unq)){ #for all labels that have ever characterized any node in a winning cluster
     
                     linear_idx = markerfound[[all_labels_for_winning_cluster_unq[j]]]
-                    fraction_counts_labels[[j]] <- (as.matrix(countseach[,j])/size(winning_partition_chunk,1))*(ones(length(linear_idx) ,1))
+                    tt <- as.matrix(countseach[j,])/size(winning_partition_chunk,1)
+                    tt <- tt*(ones(length(linear_idx) ,1))
+                    fraction_counts_labels[[j]] <- tt
                 }
                 
                 for (k in 1:length(fraction_counts_labels)){
@@ -181,94 +184,146 @@ function [nodes_and_partition_identifiers_hard nodes_and_partition_identifiers_o
                 
                 
                #fraction_counts_labels <- vertcat(fraction_counts_labels{:})
-                [row col] in fast_ind2sub(size(partitions),vertcat(markerfound{all_labels_for_winning_cluster_unq(:)}))){
-                nodes_x_partitions_coocvals <- sparse(row, col, fraction_counts_labels, size(partitions,1), size(partitions,2))# in nodes_x_partitions_coocvals rows are nodes and columns are partitions, values are mean of co-occurence with all members of a (winning) cluster using data from a non-winning partition
-                nodes_x_partitions_coocvals(winning_partition_idxs,:) <- 0
-                nodes_x_partitions_coocvals_holder{i,1} <- nodes_x_partitions_coocvals
+                
+                for (k in all_labels_for_winning_cluster_unq){
+                    if(k == all_labels_for_winning_cluster_unq[1]){
+                        verted_markerfound <- as.data.frame(markerfound[[k]])
+                    }else {
+                        verted_markerfound <- rbind(verted_markerfound, as.data.frame(markerfound[[k]]))
+                    }
+                }
+                
+                fast_res <- fast_ind2sub(size(partitions),verted_markerfound)
+                row_fs <- fast_res[1]
+                col_fs <- fast_res[2]
+                nodes_x_partitions_coocvals <- sparseMatrix(i=as.vector(row_fs),j=as.vector(t(col_fs)),x=fraction_counts_labels,
+                                                            symmetric = FALSE, repr='T',dims = c(size(partitions,1), size(partitions,2)))
+                    # in nodes_x_partitions_coocvals rows are nodes and columns are partitions, values are mean of co-occurence with all members of a (winning) cluster using data from a non-winning partition
+                nodes_x_partitions_coocvals[winning_partition_idxs,] <- 0
+                nodes_x_partitions_coocvals_holder[[i]] <- nodes_x_partitions_coocvals
     
-                mutlicom_node_cell{i}       <- find(mean(nodes_x_partitions_coocvals,2)>accept_multi)#it's a bit slow to take these means sequentially, but I've tried doing them all at once and it ends up taking up too much ram for networks of 100K+
-                cell_partition_overlapping{i,1} <- cat(1,mutlicom_node_cell{i},cell_partition{i})#i is the target cluster and the source is whatever cluster the node was originally in
-                nodes_and_partition_identifiers_overlapping(cat(1,mutlicom_node_cell{i},cell_partition{i})) <- i){
+                mutlicom_node_cell[[i]]       <- which(rowMeans(nodes_x_partitions_coocvals)>accept_multi)#it's a bit slow to take these means sequentially, but I've tried doing them all at once and it ends up taking up too much ram for networks of 100K+
+                cell_partition_overlapping[[i]] <- rbind(as.matrix(mutlicom_node_cell[[i]]),as.matrix(cell_partition[[i]]))#i is the target cluster and the source is whatever cluster the node was originally in
+                nodes_and_partition_identifiers_overlapping[c(rbind(as.matrix(mutlicom_node_cell[[i]]),as.matrix(cell_partition[[i]])))] <- i
     
             } else {#for small/banned modules
-                mutlicom_node_cell{i} <- []
-                cell_partition_overlapping{i,1} <- cell_partition{i}
+                mutlicom_node_cell[[i]] <- c()
+                cell_partition_overlapping[[i]] <- cell_partition[[i]]
     
             }
         }
-    multicom_nodes_all <- vertcat(mutlicom_node_cell{:})
-    save multi_com_list.mat multicom_nodes_all
+        
+        for (k in 1:length(mutlicom_node_cell)){
+            if(k == 1){
+                verted_mutlicom_node_cell <- as.data.frame(mutlicom_node_cell[[1]])
+            }else {
+                verted_mutlicom_node_cell <- rbind(verted_mutlicom_node_cell, as.data.frame(mutlicom_node_cell[[k]]))
+            }
+        }
+    
+    saveRDS(multicom_nodes_all,"multi_com_list.RDS")
     } else {
         cell_partition_overlapping <- cell_partition
-        multicom_nodes_all <- []
-        save multi_com_list.mat multicom_nodes_all#just so not confused with old result
+        multicom_nodes_all <- c()
+        saveRDS(multicom_nodes_all,"multi_com_list.RDS") #just so not confused with old result
     }
     
     if (accept_multi<1){
-    printmessage(['overlapping vs discrete length: ' num2str(sum(cellfun(@length,cell_partition_overlapping))) ' vs ' num2str(sum(cellfun(@length,cell_partition)))],main_iter)
+    cat('overlapping vs discrete length: ', str(sum(unlist(lapply(cell_partition_overlapping,length)))), ' vs ' ,str(sum(unlist(lapply(cell_partition,length)))), str(main_iter))
     }
     
     
     #from here on it's just arranging the output
-    [trash, idx_large_partition] <- sort(cellfun('size', cell_partition, 1), 'desc}')
-    cell_partition <- cell_partition(idx_large_partition)# reorder partitions by size, with no change to contents
+    idx_large_partition <- c()
+    for (t in 1:length(cell_partition)){
+        idx <- pracma::size(cell_partition[[t]],1)
+        idx_large_partition <- c(idx_large_partition,idx)
+    }
+    idx_large_partition <- order(idx_large_partition, decreasing = TRUE)
+    cell_partition <- cell_partition[[idx_large_partition]]# reorder partitions by size, with no change to contents
     
-    [trash, idx_large_partition] <- sort(cellfun('size', cell_partition_overlapping, 1), 'desc}')
-    cell_partition_overlapping <- cell_partition_overlapping(idx_large_partition)# reorder partitions by size,
+    dx_large_partition <- c()
+    for (t in 1:length(cell_partition_overlapping)){
+        idx <- pracma::size(cell_partition_overlapping[[t]],1)
+        dx_large_partition <- c(dx_large_partition,idx)
+    }
+    dx_large_partition <- c(order(dx_large_partition, decreasing = TRUE))
+    cell_partition_overlapping <- cell_partition_overlapping[[dx_large_partition]]
+   
     
     
-    
-    cluster_density <- cell(length(cell_partition),1)#sort order of nodes within each cluster for display purposes
+    cluster_density <- list()#sort order of nodes within each cluster for display purposes
     for (i in 1:length(cell_partition)){
-        cluster_density{i} <- mean(ADJ(cell_partition{i},cell_partition{i}))
-        [tmp,ind] <- sort(cluster_density{i}, 'desc}')
-        cell_partition{i} <- cell_partition{i}(ind)
+        cluster_density[[i]] <- mean(ADJ[unlist(cell_partition[[i]]),unlist(cell_partition[[i]])])
+        ind <- order(unlist(cluster_density[[i]]), decreasing=TRUE)
+        cell_partition[[i]] <- cell_partition[[i]][ind]
     }
     #best_nodeorder_hard=vertcat(cell_partition{:});
     
     
-    cluster_density_overlapping <- cell(length(cell_partition),1)#sort order of nodes within each cluster for display purposes
+    cluster_density_overlapping <- list() #sort order of nodes within each cluster for display purposes
     for (i in 1:length(cell_partition_overlapping)){
-        cluster_density_overlapping{i} <- mean(ADJ(cell_partition_overlapping{i},cell_partition_overlapping{i}))
-        [tmp,ind] <- sort(cluster_density_overlapping{i}, 'desc}')
-        cell_partition_overlapping{i} <- cell_partition_overlapping{i}(ind)
+        cluster_density_overlapping[[i]] <- mean(ADJ[unlist(cell_partition_overlapping[[i]]),unlist(cell_partition_overlapping[[i]])])
+        ind <- order(unlist(cluster_density_overlapping[[i]]), decreasing=TRUE)
+        cell_partition_overlapping[[i]] <- cell_partition_overlapping[[i]][ind]
     }
+    
     #best_nodeorder_hard=vertcat(cell_partition_overlapping{:});
     
     
-    partition_marker_sorted_hard <- []
-    partition_marker_sorted_overlapping <- []
+    partition_marker_sorted_hard <- c()
+    partition_marker_sorted_overlapping <- c()
     for (i in 1:length(cell_partition)){
-        partition_marker_sorted_hard(}+1:}+length(cell_partition{i})) <- i
-        partition_marker_sorted_overlapping(}+1:}+length(cell_partition_overlapping{i})) <- i
+        partition_marker_sorted_hard <- c(partition_marker_sorted_hard,rep(i,length(cell_partition)))
+        partition_marker_sorted_overlapping <- c(partition_marker_sorted_overlapping,rep(i,length(cell_partition_overlapping)))   
     }
-    nodes_and_partition_identifiers_hard <- sortrows([vertcat(cell_partition{:}) partition_marker_sorted_hard'])){
     
-    
-    partition_marker_sorted_hard <- []
-    for (i in 1:length(cell_partition)){
-        partition_marker_sorted_hard(}+1:}+length(cell_partition_overlapping{i})) <- i
+    for (k in 1:length(cell_partition)){
+        if(k == 1){
+            cell_partition_db <- as.data.frame(cell_partition[[1]])
+        }else {
+            cell_partition_db <- rbind(cell_partition_db, as.data.frame(cell_partition[[k]]))
+        }
     }
-    nodes_and_partition_identifiers_overlapping <- sortrows([vertcat(cell_partition_overlapping{:}) partition_marker_sorted_hard'])){
+    
+    nodes_and_partition_identifiers_hard <- sortrows(rbind(as.matrix(unname(cell_partition_db)),t(as.matrix(partition_marker_sorted_hard))))
+    
+
+    partition_marker_sorted_hard <- list()
+    for (i in 1:length(cell_partition_overlapping)){
+        partition_marker_sorted_hard <- c(partition_marker_sorted_hard,rep(i,length(cell_partition_overlapping)))
+    }
+    for (k in 1:length(cell_partition_overlapping)){
+        if(k == 1){
+            cell_partition_db_2 <- as.data.frame(cell_partition_overlapping[[1]])
+        }else {
+            cell_partition_db_2 <- rbind(cell_partition_db_2, as.data.frame(cell_partition_overlapping[[k]]))
+        }
+    }
+    nodes_and_partition_identifiers_overlapping <- sortrows(rbind(as.matrix(unname(cell_partition_db_2)),t(as.matrix(partition_marker_sorted_hard))))
     
     
     record_stuff <- 0#cluster cood density stats
-    if (record_stuff==1){
-    
-        partition_rows <- zeros(length(cell_partition),length(cooc))
-        cooc_temp <- cooc
-        for (i in 1:length(cell_partition)){
-    
-            partition_rows(i,:) <- sum(cooc_temp(cell_partition{i},:))./(length(cell_partition{i})-1)
-    
-        }
-    
-        [cluster row]=find(partition_rows!=0)
-        value <- partition_rows(find(partition_rows>0))
-    
-        if (isempty(accept_multi)){
-            csvwrite('SpeakEasy_cluster_assignment.csv',[row cluster value])
-        }
+    # if (record_stuff==1){
+    # 
+    #     partition_rows <- zeros(length(cell_partition),length(cooc))
+    #     
+    #     cooc_temp <- cooc
+    #     for (i in 1:length(cell_partition)){
+    # 
+    #         partition_rows[i,:] <- sum(cooc_temp(cell_partition[[i]],:))./(length(cell_partition{i})-1)
+    # 
+    #     }
+    # 
+    #     [cluster row]=find(partition_rows!=0)
+    #     value <- partition_rows(find(partition_rows>0))
+    # 
+    #     if (isempty(accept_multi)){
+    #         csvwrite('SpeakEasy_cluster_assignment.csv',[row cluster value])
+    #     }
 
+    results <- list("nodes_and_partition_identifiers_hard"=nodes_and_partition_identifiers_hard,"nodes_and_partition_identifiers_overlapping"=nodes_and_partition_identifiers_overlapping,
+                    "cell_partition"=cell_partition, "cell_partition_overlapping"=cell_partition_overlapping, "multicom_nodes_all"=multicom_nodes_all)
+    return(results)
 }
 #cluster_stats=cluster_stability(ADJ,cooc,cell_partition_overlapping);

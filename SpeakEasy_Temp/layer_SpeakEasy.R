@@ -162,41 +162,82 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
     
     ##  Call SpeakEasy on primary clusters and again on each cluster (if layers>1)
     cluster_stats_store <- list()
+    partition_codes <- list()
+    partition_codes_overlapping <- list()
+    cell_partition <- list()
+    cell_partition_overlapping <- list()
+    
     for (i in 1:layers){
         main_iter <- i#for clarity when passing
         if (i==1){
             cat('calling main routine at level 1')
-            [partition_codes{i} partition_codes_overlapping{i} cell_partition{i} cell_partition_overlapping{i}] in bootstrap_SpeakEasy(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_efficient, main_iter,multi_community_switch)){
+            boot_res <- bootstrap_SpeakEasy(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_efficient, main_iter,multi_community_switch)
+            partition_codes[[i]] <- boot_res["partition_codes"]
+            partition_codes_overlapping[[i]] <- boot_res["partition_codes_overlapping"]
+            cell_partition[[i]] <- boot_res["cell_partition"]
+            cell_partition_overlapping[[i]] <- boot_res["cell_partition_overlapping"]
     
         } else {
-            disp(['doing subclustering at level ' num2str(i)])
-            printmessage('terminal output reduced',main_iter-1)
+            cat('doing subclustering at level ', str(i))
+            cat('terminal output reduced', str(main_iter-1))
+            partition_codes_temp <- list()
+            partition_codes_overlapping_temp <- list()
+            cell_partition <- list()
+            cell_partition_overlapping_temp <- list()
+            for (j in 1:length(cell_partition_overlapping[[i-1]])){
+                current_nodes <- cell_partition_overlapping[[i-1]][j] #needed becase first node in sub cluster may be 99th overal etc
+                if (length(current_nodes)>subclustersize){  #don't even try to subcluster communites that are smaller than a certain size
+                    boot_res2 <- bootstrap_SpeakEasy(iter,ADJ[c(current_nodes),c(current_nodes)],timesteps,nback,is_ADJ_weighted,force_efficient,main_iter,multi_community_switch)
+                    partition_codes_temp[[j]] <- boot_res2["partition_codes"]
+                    partition_codes_overlapping_temp[[j]]  <- boot_res2["partition_codes_overlapping"]
+                    cell_partition[[j]] <- boot_res2["cell_partition"]
+                    cell_partition_overlapping_temp[[j]]  <- boot_res2["cell_partition_overlapping"]
     
-            for (j in 1:length(cell_partition_overlapping{i-1})){
-                current_nodes <- cell_partition_overlapping{i-1}{j}#needed becase first node in sub cluster may be 99th overal etc
-                if (length(current_nodes)>subclustersize){#don't even try to subcluster communites that are smaller than a certain size
-    
-                    [partition_codes_temp{j,1} partition_codes_overlapping_temp{j,1} cell_partition{j,1} cell_partition_overlapping_temp{j,1}] in bootstrap_SpeakEasy(iter,ADJ(current_nodes,current_nodes),timesteps,nback,is_ADJ_weighted,force_efficient,main_iter,multi_community_switch)){
-    
-                    partition_codes_overlapping_temp{j,1}(:,1) <- current_nodes(partition_codes_overlapping_temp{j,1}(:,1))
-                    for (k in 1:length(cell_partition_overlapping_temp{j,1})){#update to main node ID's
-                        cell_partition_overlapping_temp{j,1}{k} <- current_nodes( cell_partition_overlapping_temp{j,1}{k})
+                    partition_codes_overlapping_temp[[j]][,1] <- current_nodes[partition_codes_overlapping_temp[[j]][,1]]
+                    for (k in 1:length(cell_partition_overlapping_temp[[j]])){ #update to main node ID's
+                        cell_partition_overlapping_temp[[j]][k] <- current_nodes[cell_partition_overlapping_temp[[j]][k]]
                     }
                 } else {#if module is too small for subclustering
-                    cell_partition_overlapping_temp{j,1} <- {current_nodes}
+                    cell_partition_overlapping_temp[[j]] <- c(current_nodes)
                 }
             }
-            cell_partition_overlapping{i} <- vertcat(cell_partition_overlapping_temp{:})
-            cell_partition_overlapping_temp <- []
-    
-    
-            for (m in 1:length(cell_partition_overlapping{i})){
-            temp{m,1} <- [cell_partition_overlapping{i}{m}, repmat(m,length(cell_partition_overlapping{i}{m}),1)]
+            
+            for (k in 1:length(cell_partition_overlapping_temp)){
+                if(k == 1){
+                    cell_partition_overlapping_temp_db <- as.data.frame(cell_partition_overlapping_temp[[1]])
+                }else {
+                    cell_partition_overlapping_temp_db <- rbind(cell_partition_overlapping_temp_db, as.data.frame(cell_partition_overlapping_temp[[k]]))
+                }
             }
-            partition_codes_overlapping{i} <- vertcat(temp{:})
+            cell_partition_overlapping[[i]]<- cell_partition_overlapping_temp_db
+            cell_partition_overlapping_temp <- list()
+    
+            temp <- list()
+            for (m in 1:length(cell_partition_overlapping[[i]])){
+                
+                temp[[m]] <- c(cell_partition_overlapping[[i]][m], kronecker(matrix(length(cell_partition_overlapping[[i]][m]),1),m))
+            }
+            for (k in 1:length(temp)){
+                if(k == 1){
+                    temp_db <- as.data.frame(temp[[1]])
+                }else {
+                    temp_db <- rbind(temp_db, as.data.frame(temp[[k]]))
+                }
+            }
+            partition_codes_overlapping[[i]] <- temp_db
     
         }
-        convenient_node_ordering{i} <- vertcat(cell_partition_overlapping{i}{:})
-        return(partition_codes_overlapping,cell_partition_overlapping,convenient_node_ordering)
+        for (k in 1:length(cell_partition_overlapping[[i]])){
+            if(k == 1){
+                cell_partition_overlapping_db <- as.data.frame(cell_partition_overlapping[[i]][1])
+            }else {
+                cell_partition_overlapping_db <- rbind(cell_partition_overlapping_db, as.data.frame(cell_partition_overlapping[[i]][k]))
+            }
+        }
+        convenient_node_ordering[[i]]<- cell_partition_overlapping_db
+        res_layer <- c("partition_codes_overlapping"=partition_codes_overlapping,
+                       "cell_partition_overlapping"=cell_partition_overlapping,
+                       "convenient_node_ordering"=convenient_node_ordering)
+        return(res_layer)
     }
 }
