@@ -31,6 +31,536 @@
 #
 #to check that your ADJ was clustered reasonably, try running: imagesc(ADJ(convenient_node_ordering{1},convenient_node_ordering{1})
 
+
+virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_multi){
+    library(pracma)
+    
+    partitions <- t(as.matrix(partitions))
+    
+    adjustedrand <- function(partitionA,partitionB){
+        
+        ng1 <- max(partitionA)
+        ng2 <- max(partitionB)
+        #ctabmat=full(sparse(partitionA,partitionB,1,ng1,ng2)); slightly faster, but memory intense for large matrices
+        ctabmat <- sparseMatrix(i=as.vector(partitionA),j=as.vector(t(partitionB)),x=1L,
+                                symmetric = FALSE, repr='T',dims = c(ng1,ng2))#same format as lxn
+        #SpeakEasy passes in sequentially labeled clusters, so this shouldn't be an issue
+        
+        n <- sum(colSums(ctabmat))
+        nis <- sum(rowSums(ctabmat)^2)#sum of squares of sums of rows
+        njs <- sum(colSums(ctabmat)^2)#sum of squares of sums of columns
+        
+        t1 <- combs(n,2)#total number of pairs of entities
+        t2 <- sum(colSums(ctabmat^2))#sum over rows & columnns of nij^2
+        t3 <- 0.5*(nis+njs)
+        
+        #Expected index (for adjustment)
+        nc <- (n*(n^2+1)-(n+1)*nis-(n+1)*njs+2*(nis*njs)/n)/(2*(n-1))
+        
+        A <- (t1+t2-t3)#no. agreements
+        D <-   (-t2+t3)#no. disagreements
+        
+        if (is.na(nc)){
+            ARI <- 0
+        }
+        else if (t1==nc){
+            ARI <- 0#avoid division by zero; if k=1, define Rand = 0
+        } else {
+            ARI <- (A-nc)/(t1-nc)#adjusted Rand - Hubert & Arabie 1985
+        }
+        return(ARI)
+    }
+    
+    fast_ind2sub <- function(matsize,idx){
+        
+        nrs <- nrow(matsize)
+        ncs <- ncol(matsize)
+        r <- mod((idx-1),nrs) + 1
+        c <- ((idx-r)/nrs) + 1
+        res <- c(r,c)
+        return(res)
+        
+    }
+    
+    for (i in 2:size(partitions,2)){           #make sure partition codes are distinct across partitions
+        partitions[,i] <- partitions[,i]+ max(partitions[,i-1])
+    }
+    
+    adjustedrand_pairwise <- zeros(size(partitions,2))#holds all possible adjusted rand index comparisons of partitions
+    for (i in 1:size(partitions,2)){
+        # Dev
+        # print(i)
+        for (j in 1:size(partitions,2)){
+            
+            if (j<i){#metric is symetric, so save time by computing only half
+                adjustedrand_pairwise[i,j] <- adjustedrand(partitionID[i,],partitionID[j,])  
+                
+                # Dev
+                # print(j)
+            }
+        }
+    }
+    
+    adjustedrand_pairwise <- adjustedrand_pairwise+ t(adjustedrand_pairwise)
+    most_similar_var <-  max(colSums(adjustedrand_pairwise))
+    most_similar_idx <- which.max(colSums(adjustedrand_pairwise))#select representative partition
+    winning_partition <- partitions[,most_similar_idx]
+    winning_members_unq <- unique(partitions[,most_similar_idx])
+    
+    
+    cell_partition <- list()#get the indices of nodes which end up in the same cluster
+    for (i in 1:length(winning_members_unq)){
+        cell_partition[[i]]= c(which(winning_partition==winning_members_unq[i]))#seems like same contest as partitionID(most_similar_idx) but reordered
+    }
+    
+    if (accept_multi<1){
+        cat('getting overlapping clusters from virtual cooccurrence matrix',main_iter)
+        all_partitions_unq <- unique(partitions)
+        
+        #markertitle is a list of clusterID's from all partitions
+        #markerfound contains the positions of all the clusterID's in the ADJ
+        #also, if clusterID==3, all the positions of nodes taked with clusterID==3 are in markerfound{3}
+        sorted_labels <- sortrows(rbind(partitions,t(as.matrix(1:numel(partitions)))))
+        sorted_labels <- as.matrix(sorted_labels)
+        transitions=matrix(c(0, which(sorted_labels[2:nrow(sorted_labels),1]-sorted_labels[1:(nrow(sorted_labels)-1),1]!=0),size(sorted_labels,1)))#find sets of locations of the end of the previous label
+        markertitle <- zeros(max(dim(sorted_labels)),1)#for all clusters, get their locations in the partitions and their numeric identifier
+        markerfound = list()
+        for (i in 1:(size(transitions,1)-1)){#puts the ith label in the ith cell of markerfound - remember that labels are unique across partitions
+            markerfound[[i]] <- sorted_labels[c((transitions[i]+1):transitions[i+1]),1]#this actually gets very big too
+            markertitle[i,1] <- sorted_labels[transitions[i]+1,1]
+        }
+        
+        nodes_and_partition_identifiers_overlapping <- list()
+        multi_store <- list()
+        mutlicom_node_cell <- list() 
+        cell_partition_overlapping <- list() 
+        ban_module_size <- 3
+        nodes_x_partitions_coocvals_holder <- list()
+        
+        banned_modules <- which(lengths(cell_partition) < ban_module_size)#sometimes a node may be half in it's "own cluster" (size one) and in some other, so not really multi-comm
+        for (i in 1:length(winning_members_unq)){#for each cluster in winning partition
+            
+            if (!(i %in% (c(0, banned_modules)))){
+                winning_partition_idxs=which(winning_partition==winning_members_unq[i],arr.ind = T)
+                winning_partition_chunk <- partitions[winning_partition_idxs,]#all labels ever used for a cluster in all other partitions
+                all_labels_for_winning_cluster_unq <- unique(winning_partition_chunk)
+                countseach <- pracma::histc(as.matrix(winning_partition_chunk),all_labels_for_winning_cluster_unq)
+                countseach <- countseach$cnt
+                
+                fraction_counts_labels <- list()
+                for (j in 1:length(all_labels_for_winning_cluster_unq)){ #for all labels that have ever characterized any node in a winning cluster
+                    
+                    linear_idx = markerfound[[all_labels_for_winning_cluster_unq[j]]]
+                    tt <- as.matrix(countseach[j,])/size(winning_partition_chunk,1)
+                    tt <- tt*(ones(length(linear_idx) ,1))
+                    fraction_counts_labels[[j]] <- tt
+                }
+                
+                for (k in 1:length(fraction_counts_labels)){
+                    if(k == 1){
+                        fraction_counts_labels_db <- as.data.frame(fraction_counts_labels[[1]])
+                    }else {
+                        fraction_counts_labels_db <- rbind(fraction_counts_labels_db, as.data.frame(fraction_counts_labels[[k]]))
+                    }
+                }
+                
+                
+                #fraction_counts_labels <- vertcat(fraction_counts_labels{:})
+                
+                for (k in all_labels_for_winning_cluster_unq){
+                    if(k == all_labels_for_winning_cluster_unq[1]){
+                        verted_markerfound <- as.data.frame(markerfound[[k]])
+                    }else {
+                        verted_markerfound <- rbind(verted_markerfound, as.data.frame(markerfound[[k]]))
+                    }
+                }
+                
+                fast_res <- fast_ind2sub(size(partitions),verted_markerfound)
+                row_fs <- fast_res[1]
+                col_fs <- fast_res[2]
+                nodes_x_partitions_coocvals <- sparseMatrix(i=as.vector(row_fs),j=as.vector(t(col_fs)),x=fraction_counts_labels,
+                                                            symmetric = FALSE, repr='T',dims = c(size(partitions,1), size(partitions,2)))
+                # in nodes_x_partitions_coocvals rows are nodes and columns are partitions, values are mean of co-occurence with all members of a (winning) cluster using data from a non-winning partition
+                nodes_x_partitions_coocvals[winning_partition_idxs,] <- 0
+                nodes_x_partitions_coocvals_holder[[i]] <- nodes_x_partitions_coocvals
+                
+                mutlicom_node_cell[[i]]       <- which(rowMeans(nodes_x_partitions_coocvals)>accept_multi)#it's a bit slow to take these means sequentially, but I've tried doing them all at once and it ends up taking up too much ram for networks of 100K+
+                cell_partition_overlapping[[i]] <- rbind(as.matrix(mutlicom_node_cell[[i]]),as.matrix(cell_partition[[i]]))#i is the target cluster and the source is whatever cluster the node was originally in
+                nodes_and_partition_identifiers_overlapping[c(rbind(as.matrix(mutlicom_node_cell[[i]]),as.matrix(cell_partition[[i]])))] <- i
+                
+            } else {#for small/banned modules
+                mutlicom_node_cell[[i]] <- c()
+                cell_partition_overlapping[[i]] <- cell_partition[[i]]
+                
+            }
+        }
+        
+        for (k in 1:length(mutlicom_node_cell)){
+            if(k == 1){
+                verted_mutlicom_node_cell <- as.data.frame(mutlicom_node_cell[[1]])
+            }else {
+                verted_mutlicom_node_cell <- rbind(verted_mutlicom_node_cell, as.data.frame(mutlicom_node_cell[[k]]))
+            }
+        }
+        
+        saveRDS(multicom_nodes_all,"multi_com_list.RDS")
+    } else {
+        cell_partition_overlapping <- cell_partition
+        multicom_nodes_all <- c()
+        saveRDS(multicom_nodes_all,"multi_com_list.RDS") #just so not confused with old result
+    }
+    
+    if (accept_multi<1){
+        cat('overlapping vs discrete length: ', str(sum(unlist(lapply(cell_partition_overlapping,length)))), ' vs ' ,str(sum(unlist(lapply(cell_partition,length)))), str(main_iter))
+    }
+    
+    
+    #from here on it's just arranging the output
+    idx_large_partition <- c()
+    for (t in 1:length(cell_partition)){
+        idx <- pracma::size(cell_partition[[t]],1)
+        idx_large_partition <- c(idx_large_partition,idx)
+    }
+    idx_large_partition <- order(idx_large_partition, decreasing = TRUE)
+    cell_partition <- cell_partition[[idx_large_partition]]# reorder partitions by size, with no change to contents
+    
+    dx_large_partition <- c()
+    for (t in 1:length(cell_partition_overlapping)){
+        idx <- pracma::size(cell_partition_overlapping[[t]],1)
+        dx_large_partition <- c(dx_large_partition,idx)
+    }
+    dx_large_partition <- c(order(dx_large_partition, decreasing = TRUE))
+    cell_partition_overlapping <- cell_partition_overlapping[[dx_large_partition]]
+    
+    
+    
+    cluster_density <- list()#sort order of nodes within each cluster for display purposes
+    for (i in 1:length(cell_partition)){
+        cluster_density[[i]] <- mean(ADJ[unlist(cell_partition[[i]]),unlist(cell_partition[[i]])])
+        ind <- order(unlist(cluster_density[[i]]), decreasing=TRUE)
+        cell_partition[[i]] <- cell_partition[[i]][ind]
+    }
+    #best_nodeorder_hard=vertcat(cell_partition{:});
+    
+    
+    cluster_density_overlapping <- list() #sort order of nodes within each cluster for display purposes
+    for (i in 1:length(cell_partition_overlapping)){
+        cluster_density_overlapping[[i]] <- mean(ADJ[unlist(cell_partition_overlapping[[i]]),unlist(cell_partition_overlapping[[i]])])
+        ind <- order(unlist(cluster_density_overlapping[[i]]), decreasing=TRUE)
+        cell_partition_overlapping[[i]] <- cell_partition_overlapping[[i]][ind]
+    }
+    
+    #best_nodeorder_hard=vertcat(cell_partition_overlapping{:});
+    
+    
+    partition_marker_sorted_hard <- c()
+    partition_marker_sorted_overlapping <- c()
+    for (i in 1:length(cell_partition)){
+        partition_marker_sorted_hard <- c(partition_marker_sorted_hard,rep(i,length(cell_partition)))
+        partition_marker_sorted_overlapping <- c(partition_marker_sorted_overlapping,rep(i,length(cell_partition_overlapping)))   
+    }
+    
+    for (k in 1:length(cell_partition)){
+        if(k == 1){
+            cell_partition_db <- as.data.frame(cell_partition[[1]])
+        }else {
+            cell_partition_db <- rbind(cell_partition_db, as.data.frame(cell_partition[[k]]))
+        }
+    }
+    
+    nodes_and_partition_identifiers_hard <- sortrows(rbind(as.matrix(unname(cell_partition_db)),t(as.matrix(partition_marker_sorted_hard))))
+    
+    
+    partition_marker_sorted_hard <- list()
+    for (i in 1:length(cell_partition_overlapping)){
+        partition_marker_sorted_hard <- c(partition_marker_sorted_hard,rep(i,length(cell_partition_overlapping)))
+    }
+    for (k in 1:length(cell_partition_overlapping)){
+        if(k == 1){
+            cell_partition_db_2 <- as.data.frame(cell_partition_overlapping[[1]])
+        }else {
+            cell_partition_db_2 <- rbind(cell_partition_db_2, as.data.frame(cell_partition_overlapping[[k]]))
+        }
+    }
+    nodes_and_partition_identifiers_overlapping <- sortrows(rbind(as.matrix(unname(cell_partition_db_2)),t(as.matrix(partition_marker_sorted_hard))))
+    
+    
+    record_stuff <- 0#cluster cood density stats
+    # if (record_stuff==1){
+    # 
+    #     partition_rows <- zeros(length(cell_partition),length(cooc))
+    #     
+    #     cooc_temp <- cooc
+    #     for (i in 1:length(cell_partition)){
+    # 
+    #         partition_rows[i,:] <- sum(cooc_temp(cell_partition[[i]],:))./(length(cell_partition{i})-1)
+    # 
+    #     }
+    # 
+    #     [cluster row]=find(partition_rows!=0)
+    #     value <- partition_rows(find(partition_rows>0))
+    # 
+    #     if (isempty(accept_multi)){
+    #         csvwrite('SpeakEasy_cluster_assignment.csv',[row cluster value])
+    #     }
+    
+    results <- list("nodes_and_partition_identifiers_hard"=nodes_and_partition_identifiers_hard,"nodes_and_partition_identifiers_overlapping"=nodes_and_partition_identifiers_overlapping,
+                    "cell_partition"=cell_partition, "cell_partition_overlapping"=cell_partition_overlapping, "multicom_nodes_all"=multicom_nodes_all)
+    return(results)
+}
+
+SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient){
+    library(pracma)
+    kin <- as.matrix(colSums(ADJ))
+    
+    
+    
+    aggregate_labels <- function(ADJ,labels,nback){
+        library(pracma)
+        labels <- as.vector(labels)
+        labels_unq <- unique(labels)
+        
+        #sorted_labels=sortrows([labels (1:length(labels))']);  #two columns of labels and label locations
+        indices <- sort(labels, index.return=TRUE)$ix#sort faster than sortrows
+        temp <- rbind(labels,(1:length(labels)))
+        temp <- t(temp)
+        sorted_labels <- temp[indices,]
+        transitions=matrix(c(0, pracma::finds(sorted_labels[2:nrow(sorted_labels),1]-sorted_labels[1:(nrow(sorted_labels)-1),1] != 0),dim(sorted_labels)[1]))#find sets of locations of the end of the previous label
+        # node_identifiers=zeros(length(labels),1);
+        # for i=1:size(transitions,1)-1 #relabel the... labels with sequential integers, starting with 1, which becomes a time-saver later
+        #      node_identifiers(sorted_labels(transitions(i)+1:transitions(i+1),2))=i;  #maybe replace with cumsum on sprasemat based on transitions, if that's fast
+        # end
+        
+        future_markers <- zeros(size(sorted_labels,1),1)
+        future_markers[1] <- 1
+        for (k in (transitions[2:length(transitions)-1])){
+            if (k != 0){
+                future_markers[k] = 1
+            }
+        }
+        future_markers <- cumsum(future_markers)
+        node_identifiers <- zeros(size(sorted_labels,1),1)
+        node_identifiers[sorted_labels[,2]] = future_markers
+        
+        
+        #idea is to consider the labels from different time-steps to be different
+        #(even though they are not) then add the row of temp created with these pseudo-different labels, to add up the rows that are infact related to the #same core label
+        #the obvious way to do this is:
+        #temp=zeros(length(labels_unq), length(node_identifiers));
+        #temp=bsxfun(@eq, sparse(1:length(labels_unq)).', node_identifiers');
+        #but a faster way is:
+        j = t(as.matrix(1:length(node_identifiers)))
+        nodes_by_labels_all_times <- sparseMatrix(i= as.vector(node_identifiers), j=t(c(1:length(node_identifiers))), 
+                                                  x = as.vector(t(ones(length(node_identifiers),1))),
+                                                  symmetric = FALSE,repr="T")
+        #we can do that becaue node identifiers are numbers sequentially starting at 1
+        #in each row of "nodes_by_labels_all_times" we tick off positions (using a 1) where that label occurs in the full list of labels
+        
+        section_length <- dim(nodes_by_labels_all_times)[2]/nback
+        #we've arranged the labels from several timesteps chunks arranged horizontally, and we want to sum each of those chunks independently and add them all back up (because the rows in each chunch are in fact synchronized)
+        nodes_by_labels_all_times = as.matrix(nodes_by_labels_all_times)
+        for (i in 1:nback){
+            if (i==1){
+                running_sum <- nodes_by_labels_all_times[,1:section_length]
+            } else {
+                start = pracma::ceil((section_length)*(i-1))
+                end = floor(start+section_length-1)
+                running_sum <- running_sum+nodes_by_labels_all_times[,start:end]
+            }
+        }
+        
+        lxn <- running_sum%*%ADJ
+        return(lxn)
+        #size(runing_sum,2)==length(ADJ), lnx will be sparse if ADJ is sparse
+        #lxn has counts of each label (each row of lxn represents a different label) for each node (columns of lxn)
+    }
+    
+    
+    
+    #initialize matrix to store chosen labels
+    listener_history <- matrix(0,nback+total_time,max(dim(ADJ)))#each column is history for a single node, starting at row 1
+    listener_history[1:nback+1,1:max(dim(ADJ))] <- IC_store_relevant
+    #nback <- 
+    for (i in (2+nback):(nback+total_time)){
+        
+        current_listener_history <- listener_history[(i-nback):(i-1),]
+        temp_agr <- aggregate_labels(ADJ,current_listener_history,nback)#actual_counts is sparse for sparse input
+        actual_counts <- temp_agr 
+        active_labels <- unique(as.vector(current_listener_history))
+        counts_normk <- colSums(actual_counts)  #',2)' needed for case of size-1 clusters
+        count_normk_norm1 <- as.matrix(counts_normk/sum(counts_normk))#proportions of various labels normalized to 1
+        
+        #if matrix is very sparse, or too large to store a full ADJ, we only care about generating expected counts of labels if a node actually receives some of that label
+        x_y <- which(actual_counts != 0, arr.ind = T)#x will be labels and y will be nodeID
+        x <- x_y[,1]
+        y <- x_y[,2]
+        #two lines below are easier to understand but slightly slower separately
+        #scaled_kin=nback*([full(count_normk_norm1(x))]'.* kin(y)); #scales normalized counts by total input (some nodes have more inputs and thus you would expect more of all labels)
+        #expected=sparse(x,y,scaled_kin, size(actual_counts,1),size(actual_counts,2));  #same format as lxn
+        expected <- sparseMatrix(i=as.vector(x),j=as.vector(t(y)),x=as.vector(nback*(as.matrix(count_normk_norm1[x])* kin[y])),
+                                 symmetric = FALSE, repr='T',dims = c(length(unique(x)), dim(actual_counts)[2]))#same format as lxn
+        
+        
+        # } else {
+        #     # sum(expected)==kin*nback
+        #     expected <- nback*t(as.matrix(count_normk_norm1))*(as.matrix(kin))#a bit slower for ADJ's with less than 3# density compared to option above (and more mem usage) but 10x faster on sparse
+        # 
+        #diagnostic
+        #                 [x y]=find(actual_counts);   #x will be labels and y will be nodeID
+        #                 expectedsparse=sparse(x,y,nback*([full(count_normk_norm1(x))]'.* kin(y)), size(actual_counts,1),size(actual_counts,2));  #same format as lxn
+        #          full(actual_counts)
+        #          full(expectedsparse)
+        #          full(expected)
+        #          full( expectedsparse-actual_counts)
+        #          full( expected-actual_counts)
+        #         length(find(min(( expectedsparse-actual_counts))>0))
+        
+        tem <- actual_counts-expected
+        tem <- t(tem)
+        max_vals <- apply(tem,1,max)
+        max_idx <- apply(tem,1,which.max)
+        # length(find(maxvals==0))   #might worry that for force_efficient==1 case max of some column will be zero, indicating a non-elegible label, but that never happens... could add 100 to each non-zero entry of actual_counts if worried, but really not necessary
+        listener_history[i,] <-  active_labels[max_idx]
+        
+    }#time-step loop
+    
+    #identify nodes in same clusters
+    sorted_labels <- t(sortrows(rbind(t(listener_history[(dim(listener_history)[1]-2),]),t(1:length(listener_history[(dim(listener_history)[1]-2),])))))
+    transitions=matrix(c(0, pracma::finds(sorted_labels[(2:dim(sorted_labels)[1]),1]-sorted_labels[(1:dim(sorted_labels)[1]-1),1]!=0), size(sorted_labels,1)))#find sets of locations of the end of the previous label
+    partitionID <- zeros(max(dim(ADJ)),1)#for all clusters, get their locations in the partitions and their numeric identifier
+    label_assignment <-list()
+    for (i in 1:(size(transitions,1)-1)){
+        ids <- c((transitions[i]+1):transitions[i+1])
+        partitionID[sorted_labels[ids,2]] <- i
+        
+        #this actually gets very big too
+        label_assignment[[i]] <- sorted_labels[((transitions[i]+1):transitions[i+1]),2]
+    }
+    final_res <- list("label_assignment" = label_assignment, "partitionID" = partitionID, "listener_history" = listener_history)
+    return(final_res)
+}
+
+
+bootstrap_SpeakEasy <- function(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_efficient, main_iter, multi_community_switch,varargin){     
+    
+    cat('starting to setup ICs for all runs',main_iter)
+    
+    
+    genIC_full <- function(ADJ,how_many_runs,nback,varargin){
+        
+        IC_store <- matrix(0,how_many_runs*(nback+1),max(dim(ADJ)))
+        
+        for (m in 1:max(dim(ADJ))){#setup initial listener histories with randomly selected neighbor labels
+            
+            contacts=as.list(which(ADJ[,m]==0))
+            contacts = unlist(unname(contacts))
+            if (length(contacts)==0){#particularly in very small modules, we might have no connections... usually diag(ADJ) is set to all ones, which also solves this, but in case it is not, this avoids an error message
+                IC_store[,m] <- m
+                
+                
+            } else {
+                
+                contacts_values <- ADJ[contacts,m]
+                
+                ## Made an edit here to change the contacts_values  to 0 rahter than 1 ##
+                
+                if (length(which(contacts_values==1))!=length(contacts_values)){#this should generally be the case for weighted networks
+                    contacts_weights <- contacts_values-min(contacts_values)
+                    # Commented the below sections since it was popping up NaN values -- Pradeep
+                    contacts_weights <- contacts_weights/max(contacts_weights)#rescale weights for to [0 1]... not totally necessary, but seems to help in some cases
+                    #should note that this is just for the selection of IC's - the
+                    #links with negative weights in ADJ should continue to have
+                    #different (not just rescaled) behavior from positive links -
+                    #practically speaking tests bear this out as nodes with negative
+                    #correlations to some other group of nodes end up outside of that
+                    #given cluster
+                    
+                } else {
+                    contacts_weights <- matrix(1,length(contacts),1)
+                    
+                }
+                
+                bins <- c(0,cumsum(contacts_weights/sum(contacts_weights)),1)
+                bins <- as.matrix(bins)
+                bins <- as.matrix(apply(bins, 1, FUN = min))
+                
+                library(pracma)
+                bins <- sort(bins, decreasing = FALSE)
+                ret_hist <- histc(rand(how_many_runs*(nback+1),1),bins)
+                idxs <- c()
+                for (i in 1:length(ret_hist$bin)){
+                    temp <- ret_hist$bin[i]
+                    idxs <- c(idxs,contacts[temp])
+                }
+                IC_store[,m] <- idxs
+                #using cellfun (@randsample or bsxfn isn't any faster
+                
+            }
+            
+        }
+        return(IC_store)
+    }
+    
+    
+    genIC_sparse_unweighted <- function(ADJ,how_many_runs,nback,varargin){
+        library(pracma)
+        k <- colSums(ADJ)
+        kcumsum <- cumsum(k)
+        basicrand <- rand((nback+1)*how_many_runs,max(dim(ADJ)))
+        indices <- which(ADJ != 0, arr.ind = TRUE)
+        row_ind <- indices[,1]
+        basicrand_scaled <- ceil(basicrand*drop(repmat(k,size(basicrand,1),1)))
+        basicrand_scaled_lifted <- basicrand_scaled+repmat(c(0,kcumsum[-length(kcumsum)]),size(basicrand_scaled,1),1)
+        IC_store <- Reshape(row(basicrand_scaled_lifted),(nback+1)*how_many_runs,max(dim(ADJ)))
+        return(IC_store)
+    }
+    
+    if (is_ADJ_weighted!=0){#use the appropriate routine to generate the initial conditions for the run (we can do this more quickly for sparse unweighted networks
+        IC_store <- genIC_full(ADJ,iter,nback)
+    } else {
+        IC_store <- genIC_sparse_unweighted(ADJ,iter,nback)
+    }
+    
+    partitionID_lst <- matrix(nrow=max(dim(IC_store)),ncol=iter)
+    for (i in 1:iter){
+        
+        cat('iteration #',str(i), ' of ',str(iter),main_iter)
+        
+        
+        IC_store_relevant <- IC_store[1:(nback+1),]
+        IC_store <- IC_store[1,] #set in SSLPA
+        speakeasy_res <- SpeakEasycore(ADJ,timesteps,IC_store_relevant,nback,force_efficient)
+        listener_history = speakeasy_res$listener_history
+        partitionID_lst[,i] = speakeasy_res$partitionID  #i.e.check sparse and suppress graphics
+    }
+    
+    partition_columns <- c()
+    for( i in ncol(partitionID_lst)){
+        partition_columns <- c(partition_columns,as.vector(partitionID_lst[,i]))
+    }
+    
+    ### Take a look into with @Jake
+    save_results <- 0
+    if (main_iter==1){
+        if (save_results==1){
+            cat('saving partitions')
+            saveRDS(list(ADJ,partition_columns,partitionID,multi_community_switch),'record_of_all_partitions.RDS')#sometimes useful for very large networks if you want to save results before consensus clustering, especially if you want to try several multi-community cutoffs
+        }
+    }
+    
+    cat('started consensus clustering', as.character(main_iter))
+    
+    virt_res <- virtual_cooccurrence(ADJ,partition_columns,partitionID_lst, main_iter, multi_community_switch)
+    
+    boot_res <- list("partition_codes"= virt_res["nodes_and_partition_identifiers_hard"],
+                     "partition_codes_overlapping" = virt_res["nodes_and_partition_identifiers_overlapping"],
+                     "cell_partition" =virt_res["cell_partition"],
+                     "cell_partition_overlapping" =virt_res["cell_partition_overlapping"])
+    return(boot_res)
+    
+}
+
+
 layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMMA>
 ## Get ADJ properties to optimize runtime
 # values in this section do not change the SpeakEasy method, just help to
