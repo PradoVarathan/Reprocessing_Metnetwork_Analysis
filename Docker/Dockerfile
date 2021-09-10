@@ -1,4 +1,4 @@
-RG BASE_IMAGE=rstudio/r-base
+ARG BASE_IMAGE=rstudio/r-base
 FROM ${BASE_IMAGE}:centos7
 
 ARG R_VERSION=3.6.3
@@ -91,7 +91,6 @@ RUN mkdir ~/metanetwork \
     && touch /home/test_res/.openmpi/mca-params.conf \
     && echo "orte_default_hostfile=/home/test_res/default_host" >> /home/test_res/.openmpi/mca-params.conf \
     && echo "localhost slots=32" >> /home/test_res/default_host
-
 
 
 
