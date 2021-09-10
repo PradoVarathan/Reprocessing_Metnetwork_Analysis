@@ -379,7 +379,7 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
     
     #initialize matrix to store chosen labels
     listener_history <- matrix(0,nback+total_time,max(dim(ADJ)))#each column is history for a single node, starting at row 1
-    listener_history[1:nback+1,1:max(dim(ADJ))] <- IC_store_relevant
+    listener_history[1:(nback+1),1:max(dim(ADJ))] <- IC_store_relevant
     #nback <- 
     for (i in (2+nback):(nback+total_time)){
         
@@ -528,7 +528,7 @@ bootstrap_SpeakEasy <- function(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_
         
         
         IC_store_relevant <- IC_store[1:(nback+1),]
-        IC_store <- IC_store[1,] #set in SSLPA
+        IC_store <- IC_store[(nback+1):nrow(IC_store),] #set in SSLPA
         speakeasy_res <- SpeakEasycore(ADJ,timesteps,IC_store_relevant,nback,force_efficient)
         listener_history = speakeasy_res$listener_history
         partitionID_lst[,i] = speakeasy_res$partitionID  #i.e.check sparse and suppress graphics
