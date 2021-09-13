@@ -35,7 +35,7 @@
 virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_multi){
     library(pracma)
     
-    partitions <- t(as.matrix(partitions))
+#    partitions <- t(as.matrix(unlist(partitions)))
     
     adjustedrand <- function(partitionA,partitionB){
         
@@ -89,11 +89,11 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     adjustedrand_pairwise <- zeros(size(partitions,2))#holds all possible adjusted rand index comparisons of partitions
     for (i in 1:size(partitions,2)){
         # Dev
-        # print(i)
+         print(i)
         for (j in 1:size(partitions,2)){
             
             if (j<i){#metric is symetric, so save time by computing only half
-                adjustedrand_pairwise[i,j] <- adjustedrand(partitionID[i,],partitionID[j,])  
+                adjustedrand_pairwise[i,j] <- adjustedrand(partitionID[[as.character(i)]],partitionID[[as.character(j)]])  
                 
                 # Dev
                 # print(j)
@@ -158,9 +158,9 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
                 
                 for (k in 1:length(fraction_counts_labels)){
                     if(k == 1){
-                        fraction_counts_labels_db <- as.data.frame(fraction_counts_labels[[1]])
+                        fraction_counts_labels_db <- data.frame("fraction_counts_labels" = fraction_counts_labels[[1]])
                     }else {
-                        fraction_counts_labels_db <- rbind(fraction_counts_labels_db, as.data.frame(fraction_counts_labels[[k]]))
+                        fraction_counts_labels_db <- rbind(fraction_counts_labels_db, data.frame("fraction_counts_labels" = fraction_counts_labels[[k]]))
                     }
                 }
                 
@@ -169,9 +169,9 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
                 
                 for (k in all_labels_for_winning_cluster_unq){
                     if(k == all_labels_for_winning_cluster_unq[1]){
-                        verted_markerfound <- as.data.frame(markerfound[[k]])
+                        verted_markerfound <- data.frame("mark" = markerfound[[k]])
                     }else {
-                        verted_markerfound <- rbind(verted_markerfound, as.data.frame(markerfound[[k]]))
+                        verted_markerfound <- rbind(verted_markerfound, data.frame("mark" = markerfound[[k]]))
                     }
                 }
                 
@@ -197,9 +197,9 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
         
         for (k in 1:length(mutlicom_node_cell)){
             if(k == 1){
-                verted_mutlicom_node_cell <- as.data.frame(mutlicom_node_cell[[1]])
+                verted_mutlicom_node_cell <- data.frame("vert" = mutlicom_node_cell[[1]])
             }else {
-                verted_mutlicom_node_cell <- rbind(verted_mutlicom_node_cell, as.data.frame(mutlicom_node_cell[[k]]))
+                verted_mutlicom_node_cell <- rbind(verted_mutlicom_node_cell, data.frame("vert" =mutlicom_node_cell[[k]]))
             }
         }
         
@@ -222,7 +222,7 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
         idx_large_partition <- c(idx_large_partition,idx)
     }
     idx_large_partition <- order(idx_large_partition, decreasing = TRUE)
-    cell_partition <- cell_partition[[idx_large_partition]]# reorder partitions by size, with no change to contents
+    cell_partition <- cell_partition[idx_large_partition]# reorder partitions by size, with no change to contents
     
     dx_large_partition <- c()
     for (t in 1:length(cell_partition_overlapping)){
@@ -230,7 +230,7 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
         dx_large_partition <- c(dx_large_partition,idx)
     }
     dx_large_partition <- c(order(dx_large_partition, decreasing = TRUE))
-    cell_partition_overlapping <- cell_partition_overlapping[[dx_large_partition]]
+    cell_partition_overlapping <- cell_partition_overlapping[dx_large_partition]
     
     
     
@@ -262,9 +262,9 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     
     for (k in 1:length(cell_partition)){
         if(k == 1){
-            cell_partition_db <- as.data.frame(cell_partition[[1]])
+            cell_partition_db <-data.frame("cell_part" = cell_partition[[1]])
         }else {
-            cell_partition_db <- rbind(cell_partition_db, as.data.frame(cell_partition[[k]]))
+            cell_partition_db <- rbind(cell_partition_db, data.frame("cell_part" = cell_partition[[k]]))
         }
     }
     
@@ -317,15 +317,16 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
     
     aggregate_labels <- function(ADJ,labels,nback){
         library(pracma)
-        labels <- as.vector(labels)
+        labels <- data.matrix(as.vector(labels))
         labels_unq <- unique(labels)
         
         #sorted_labels=sortrows([labels (1:length(labels))']);  #two columns of labels and label locations
         indices <- sort(labels, index.return=TRUE)$ix#sort faster than sortrows
-        temp <- rbind(labels,(1:length(labels)))
+        labs <- c(1:length(labels))
+        temp <- data.matrix(rbind(as.vector(labels),as.vector(labs)))
         temp <- t(temp)
-        sorted_labels <- temp[indices,]
-        transitions=matrix(c(0, pracma::finds(sorted_labels[2:nrow(sorted_labels),1]-sorted_labels[1:(nrow(sorted_labels)-1),1] != 0),dim(sorted_labels)[1]))#find sets of locations of the end of the previous label
+        sorted_labels <- temp[as.vector(indices),]
+        transitions=data.matrix(c(0, pracma::finds(unlist(sorted_labels[(2:nrow(sorted_labels)),1])-unlist(sorted_labels[(1:(nrow(sorted_labels)-1)),1]) != 0),dim(sorted_labels)[1]))#find sets of locations of the end of the previous label
         # node_identifiers=zeros(length(labels),1);
         # for i=1:size(transitions,1)-1 #relabel the... labels with sequential integers, starting with 1, which becomes a time-saver later
         #      node_identifiers(sorted_labels(transitions(i)+1:transitions(i+1),2))=i;  #maybe replace with cumsum on sprasemat based on transitions, if that's fast
@@ -340,7 +341,7 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
         }
         future_markers <- cumsum(future_markers)
         node_identifiers <- zeros(size(sorted_labels,1),1)
-        node_identifiers[sorted_labels[,2]] = future_markers
+        node_identifiers[as.vector(sorted_labels[,2]),1] = future_markers
         
         
         #idea is to consider the labels from different time-steps to be different
@@ -383,7 +384,8 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
     #nback <- 
     for (i in (2+nback):(nback+total_time)){
         
-        current_listener_history <- listener_history[(i-nback):(i-1),]
+        current_listener_history <- t(listener_history[(i-nback):(i-1),])
+        current_listener_history = t(as.matrix(as.vector(current_listener_history)))
         temp_agr <- aggregate_labels(ADJ,current_listener_history,nback)#actual_counts is sparse for sparse input
         actual_counts <- temp_agr 
         active_labels <- unique(as.vector(current_listener_history))
@@ -443,7 +445,7 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
 
 bootstrap_SpeakEasy <- function(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_efficient, main_iter, multi_community_switch,varargin){     
     
-    cat('starting to setup ICs for all runs',main_iter)
+    cat('starting to setup ICs for all runs',main_iter, '\n')
     
     
     genIC_full <- function(ADJ,how_many_runs,nback,varargin){
@@ -452,7 +454,7 @@ bootstrap_SpeakEasy <- function(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_
         
         for (m in 1:max(dim(ADJ))){#setup initial listener histories with randomly selected neighbor labels
             
-            contacts=as.list(which(ADJ[,m]==0))
+            contacts=as.list(which(ADJ[,m]!=0))
             contacts = unlist(unname(contacts))
             if (length(contacts)==0){#particularly in very small modules, we might have no connections... usually diag(ADJ) is set to all ones, which also solves this, but in case it is not, this avoids an error message
                 IC_store[,m] <- m
@@ -521,22 +523,22 @@ bootstrap_SpeakEasy <- function(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_
         IC_store <- genIC_sparse_unweighted(ADJ,iter,nback)
     }
     
-    partitionID_lst <- matrix(nrow=max(dim(IC_store)),ncol=iter)
+    partition_columns <- matrix(nrow=max(dim(IC_store)),ncol=iter)
     for (i in 1:iter){
         
-        cat('iteration #',str(i), ' of ',str(iter),main_iter)
+        cat(paste0('iteration #',str(i), ' of ',str(iter),main_iter,'\n'))
         
         
         IC_store_relevant <- IC_store[1:(nback+1),]
         IC_store <- IC_store[(nback+1):nrow(IC_store),] #set in SSLPA
         speakeasy_res <- SpeakEasycore(ADJ,timesteps,IC_store_relevant,nback,force_efficient)
         listener_history = speakeasy_res$listener_history
-        partitionID_lst[,i] = speakeasy_res$partitionID  #i.e.check sparse and suppress graphics
+        partition_columns[,i] = speakeasy_res$partitionID  #i.e.check sparse and suppress graphics
     }
     
-    partition_columns <- c()
-    for( i in ncol(partitionID_lst)){
-        partition_columns <- c(partition_columns,as.vector(partitionID_lst[,i]))
+    partitionID_lst <- list()
+    for( i in 1:ncol(partition_columns)){
+        partitionID_lst[[as.character(i)]] <- partition_columns[,i]
     }
     
     ### Take a look into with @Jake
@@ -548,7 +550,7 @@ bootstrap_SpeakEasy <- function(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_
         }
     }
     
-    cat('started consensus clustering', as.character(main_iter))
+    cat(paste0('started consensus clustering : ', as.character(main_iter),'\n'))
     
     virt_res <- virtual_cooccurrence(ADJ,partition_columns,partitionID_lst, main_iter, multi_community_switch)
     
@@ -615,12 +617,12 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
     ADJ_characteristics <- function(ADJ,max_ADJ_size, force_efficient){
         
         if (dim(ADJ)[1] != dim(ADJ)[2]){
-            cat('your ADJ is not square, please fix')
+            cat('your ADJ is not square, please fix \n')
             stop()
         }
         
         if ((max(ADJ))>1 | min(ADJ)<(-1)){
-            cat('your connection strength is outside [-1 1] please fix')
+            cat('your connection strength is outside [-1 1] please fix \n')
             stop()
         }
         
@@ -648,10 +650,10 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
             #in this case we can afford to test all links
             c <- ADJ[which(ADJ != 0)]
             if (length(which(c>.9999))!=length(c)){#in case there are rounding errors
-                cat('weighted sparse')
+                cat('weighted sparse \n')
                 is_ADJ_weighted <- 1
             } else {
-                cat('unweighted_sparse')
+                cat('unweighted_sparse \n')
                 is_ADJ_weighted <- 0
             }
             
@@ -659,7 +661,7 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
         
         
         #force_efficient--1 if the ADJ is huge or if it is small&dense
-        if (force_efficient == 1){
+        if (force_efficient != 1){
             
             if (dim(ADJ)[1]<max_ADJ_size){#if matrix is small enough that we could use full multiplicationn
                 
@@ -700,7 +702,7 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
     for (i in 1:layers){
         main_iter <- i#for clarity when passing
         if (i==1){
-            cat('calling main routine at level 1')
+            cat('calling main routine at level 1 \n')
             boot_res <- bootstrap_SpeakEasy(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_efficient, main_iter,multi_community_switch)
             partition_codes[[i]] <- boot_res["partition_codes"]
             partition_codes_overlapping[[i]] <- boot_res["partition_codes_overlapping"]
@@ -757,6 +759,7 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
             partition_codes_overlapping[[i]] <- temp_db
     
         }
+        
         for (k in 1:length(cell_partition_overlapping[[i]])){
             if(k == 1){
                 cell_partition_overlapping_db <- as.data.frame(cell_partition_overlapping[[i]][1])
@@ -764,6 +767,8 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
                 cell_partition_overlapping_db <- rbind(cell_partition_overlapping_db, as.data.frame(cell_partition_overlapping[[i]][k]))
             }
         }
+        
+        
         convenient_node_ordering[[i]]<- cell_partition_overlapping_db
         res_layer <- c("partition_codes_overlapping"=partition_codes_overlapping,
                        "cell_partition_overlapping"=cell_partition_overlapping,
