@@ -43,8 +43,10 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
         ng2 <- max(partitionB)
         #ctabmat=full(sparse(partitionA,partitionB,1,ng1,ng2)); slightly faster, but memory intense for large matrices
         ctabmat <- sparseMatrix(i=as.vector(partitionA),j=as.vector(t(partitionB)),x=1L,
-                                symmetric = FALSE, repr='T',dims = c(ng1,ng2))#same format as lxn
-        #SpeakEasy passes in sequentially labeled clusters, so this shouldn't be an issue
+                                symmetric = FALSE, repr='T',index1 = FALSE)#same format as lxn
+       
+        #dims = c(ng1,ng2),
+         #SpeakEasy passes in sequentially labeled clusters, so this shouldn't be an issue
         
         n <- sum(colSums(ctabmat))
         nis <- sum(rowSums(ctabmat)^2)#sum of squares of sums of rows
@@ -62,11 +64,10 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
         
         if (is.na(nc)){
             ARI <- 0
-        }
-        else if (t1==nc){
-            ARI <- 0#avoid division by zero; if k=1, define Rand = 0
+        } else if(t1==nc){
+            ARI <- 0 #avoid division by zero; if k=1, define Rand = 0
         } else {
-            ARI <- (A-nc)/(t1-nc)#adjusted Rand - Hubert & Arabie 1985
+            ARI <- (A-nc)/(t1-nc) #adjusted Rand - Hubert & Arabie 1985
         }
         return(ARI)
     }
@@ -99,6 +100,7 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
                 # print(j)
             }
         }
+        print('done')
     }
     
     adjustedrand_pairwise <- adjustedrand_pairwise+ t(adjustedrand_pairwise)
@@ -268,7 +270,7 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
         }
     }
     
-    nodes_and_partition_identifiers_hard <- sortrows(rbind(as.matrix(unname(cell_partition_db)),t(as.matrix(partition_marker_sorted_hard))))
+    nodes_and_partition_identifiers_hard <- sortrows(rbind(as.matrix(unname(cell_partition_db)),as.matrix(partition_marker_sorted_hard)))
     
     
     partition_marker_sorted_hard <- list()
@@ -277,12 +279,12 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     }
     for (k in 1:length(cell_partition_overlapping)){
         if(k == 1){
-            cell_partition_db_2 <- as.data.frame(cell_partition_overlapping[[1]])
+            cell_partition_db_2 <- data.frame("cell_part" =cell_partition_overlapping[[1]])
         }else {
-            cell_partition_db_2 <- rbind(cell_partition_db_2, as.data.frame(cell_partition_overlapping[[k]]))
+            cell_partition_db_2 <- rbind(cell_partition_db_2, data.frame("cell_part" = cell_partition_overlapping[[k]]))
         }
     }
-    nodes_and_partition_identifiers_overlapping <- sortrows(rbind(as.matrix(unname(cell_partition_db_2)),t(as.matrix(partition_marker_sorted_hard))))
+    nodes_and_partition_identifiers_overlapping <- sortrows(data.matrix(unlist(rbind(as.matrix(unname(cell_partition_db_2)),as.matrix(partition_marker_sorted_hard)))))
     
     
     record_stuff <- 0#cluster cood density stats
@@ -303,7 +305,7 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     #     if (isempty(accept_multi)){
     #         csvwrite('SpeakEasy_cluster_assignment.csv',[row cluster value])
     #     }
-    
+    print('new res')
     results <- list("nodes_and_partition_identifiers_hard"=nodes_and_partition_identifiers_hard,"nodes_and_partition_identifiers_overlapping"=nodes_and_partition_identifiers_overlapping,
                     "cell_partition"=cell_partition, "cell_partition_overlapping"=cell_partition_overlapping, "multicom_nodes_all"=multicom_nodes_all)
     return(results)
@@ -383,7 +385,7 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
     listener_history[1:(nback+1),1:max(dim(ADJ))] <- IC_store_relevant
     #nback <- 
     for (i in (2+nback):(nback+total_time)){
-        
+        print(i)
         current_listener_history <- t(listener_history[(i-nback):(i-1),])
         current_listener_history = t(as.matrix(as.vector(current_listener_history)))
         temp_agr <- aggregate_labels(ADJ,current_listener_history,nback)#actual_counts is sparse for sparse input
@@ -393,16 +395,19 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
         count_normk_norm1 <- as.matrix(counts_normk/sum(counts_normk))#proportions of various labels normalized to 1
         
         #if matrix is very sparse, or too large to store a full ADJ, we only care about generating expected counts of labels if a node actually receives some of that label
-        x_y <- which(actual_counts != 0, arr.ind = T)#x will be labels and y will be nodeID
-        x <- x_y[,1]
-        y <- x_y[,2]
-        #two lines below are easier to understand but slightly slower separately
-        #scaled_kin=nback*([full(count_normk_norm1(x))]'.* kin(y)); #scales normalized counts by total input (some nodes have more inputs and thus you would expect more of all labels)
-        #expected=sparse(x,y,scaled_kin, size(actual_counts,1),size(actual_counts,2));  #same format as lxn
-        expected <- sparseMatrix(i=as.vector(x),j=as.vector(t(y)),x=as.vector(nback*(as.matrix(count_normk_norm1[x])* kin[y])),
-                                 symmetric = FALSE, repr='T',dims = c(length(unique(x)), dim(actual_counts)[2]))#same format as lxn
-        
-        
+        if (force_efficient == 1){
+            x_y <- which(actual_counts != 0, arr.ind = T)#x will be labels and y will be nodeID
+            x <- x_y[,1]
+            y <- x_y[,2]
+            #two lines below are easier to understand but slightly slower separately
+            #scaled_kin=nback*([full(count_normk_norm1(x))]'.* kin(y)); #scales normalized counts by total input (some nodes have more inputs and thus you would expect more of all labels)
+            #expected=sparse(x,y,scaled_kin, size(actual_counts,1),size(actual_counts,2));  #same format as lxn
+            expected <- sparseMatrix(i=as.vector(x),j=as.vector(t(y)),x=as.vector(nback*(as.matrix(count_normk_norm1[x])* kin[y])),
+                                     symmetric = FALSE, repr='T')#same format as lxn
+        } else {
+            expected <- nback*(as.matrix(count_normk_norm1)*as.matrix(kin)) # %a bit slower for ADJ's with less than 3% density compared to option above (and more mem usage) but 10x faster on sparse
+        }
+        #,dims = c(length(unique(x)), dim(actual_counts)[2])
         # } else {
         #     # sum(expected)==kin*nback
         #     expected <- nback*t(as.matrix(count_normk_norm1))*(as.matrix(kin))#a bit slower for ADJ's with less than 3# density compared to option above (and more mem usage) but 10x faster on sparse
@@ -416,7 +421,6 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
         #          full( expectedsparse-actual_counts)
         #          full( expected-actual_counts)
         #         length(find(min(( expectedsparse-actual_counts))>0))
-        
         tem <- actual_counts-expected
         tem <- t(tem)
         max_vals <- apply(tem,1,max)
@@ -526,7 +530,7 @@ bootstrap_SpeakEasy <- function(iter,ADJ,timesteps,nback,is_ADJ_weighted, force_
     partition_columns <- matrix(nrow=max(dim(IC_store)),ncol=iter)
     for (i in 1:iter){
         
-        cat(paste0('iteration #',str(i), ' of ',str(iter),main_iter,'\n'))
+        cat(paste0('iteration #',as.character(i), ' of ',str(iter),main_iter,'\n'))
         
         
         IC_store_relevant <- IC_store[1:(nback+1),]
@@ -698,7 +702,7 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
     partition_codes_overlapping <- list()
     cell_partition <- list()
     cell_partition_overlapping <- list()
-    
+    convenient_node_ordering <- list()
     for (i in 1:layers){
         main_iter <- i#for clarity when passing
         if (i==1){
@@ -770,6 +774,7 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
         
         
         convenient_node_ordering[[i]]<- cell_partition_overlapping_db
+        
         res_layer <- c("partition_codes_overlapping"=partition_codes_overlapping,
                        "cell_partition_overlapping"=cell_partition_overlapping,
                        "convenient_node_ordering"=convenient_node_ordering)
