@@ -9,7 +9,7 @@
 
 
 
-##This is the suggested fuction through which to interact with SpeakEasy
+##This is the suggestedtt fuction through which to interact with SpeakEasy
 #clustering.  The loops in this funtion are related to calling SpeakEasy on
 #subsets of data.  This maybe useful when there are genuine hierarchies of clusters in the
 #data, although you cannot always force SpeakEasy to split clusters (unlike hierarchical clustering).
@@ -34,7 +34,9 @@
 
 virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_multi){
     library(pracma)
-    
+    print(dim(partitions))
+    print(dim(as.matrix(partitionID)))
+    print(length(partitionID[[1]]))
 #    partitions <- t(as.matrix(unlist(partitions)))
     
     adjustedrand <- function(partitionA,partitionB){
@@ -108,7 +110,8 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     most_similar_idx <- which.max(colSums(adjustedrand_pairwise))#select representative partition
     winning_partition <- partitions[,most_similar_idx]
     winning_members_unq <- unique(partitions[,most_similar_idx])
-    
+    print("winning_members_unq")
+    print(length(winning_members_unq))
     
     cell_partition <- list()#get the indices of nodes which end up in the same cluster
     for (i in 1:length(winning_members_unq)){
@@ -213,7 +216,7 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     }
     
     if (accept_multi<1){
-        cat('overlapping vs discrete length: ', str(sum(unlist(lapply(cell_partition_overlapping,length)))), ' vs ' ,str(sum(unlist(lapply(cell_partition,length)))), str(main_iter))
+        cat('overlapping vs discrete length: ', as.character(sum(unlist(lapply(cell_partition_overlapping,length)))), ' vs ' ,str(sum(unlist(lapply(cell_partition,length)))), str(main_iter))
     }
     
     
@@ -238,7 +241,7 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     
     cluster_density <- list()#sort order of nodes within each cluster for display purposes
     for (i in 1:length(cell_partition)){
-        cluster_density[[i]] <- mean(ADJ[unlist(cell_partition[[i]]),unlist(cell_partition[[i]])])
+        cluster_density[[i]] <- colMeans(as.matrix(ADJ[unlist(cell_partition[[i]]),unlist(cell_partition[[i]])]))
         ind <- order(unlist(cluster_density[[i]]), decreasing=TRUE)
         cell_partition[[i]] <- cell_partition[[i]][ind]
     }
@@ -247,7 +250,7 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     
     cluster_density_overlapping <- list() #sort order of nodes within each cluster for display purposes
     for (i in 1:length(cell_partition_overlapping)){
-        cluster_density_overlapping[[i]] <- mean(ADJ[unlist(cell_partition_overlapping[[i]]),unlist(cell_partition_overlapping[[i]])])
+        cluster_density_overlapping[[i]] <- colMeans(as.matrix(ADJ[unlist(cell_partition_overlapping[[i]]),unlist(cell_partition_overlapping[[i]])]))
         ind <- order(unlist(cluster_density_overlapping[[i]]), decreasing=TRUE)
         cell_partition_overlapping[[i]] <- cell_partition_overlapping[[i]][ind]
     }
@@ -255,11 +258,11 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
     #best_nodeorder_hard=vertcat(cell_partition_overlapping{:});
     
     
-    partition_marker_sorted_hard <- c()
-    partition_marker_sorted_overlapping <- c()
+    partition_marker_sorted_hard <- list()
+    partition_marker_sorted_overlapping <- list()
     for (i in 1:length(cell_partition)){
-        partition_marker_sorted_hard <- c(partition_marker_sorted_hard,rep(i,length(cell_partition)))
-        partition_marker_sorted_overlapping <- c(partition_marker_sorted_overlapping,rep(i,length(cell_partition_overlapping)))   
+        partition_marker_sorted_hard <- c(partition_marker_sorted_hard,rep(i,length(cell_partition[[i]])))
+        partition_marker_sorted_overlapping <- c(partition_marker_sorted_overlapping,rep(i,length(cell_partition_overlapping[[i]])))   
     }
     
     for (k in 1:length(cell_partition)){
@@ -270,21 +273,33 @@ virtual_cooccurrence <- function(ADJ,partitions,partitionID, main_iter, accept_m
         }
     }
     
-    nodes_and_partition_identifiers_hard <- sortrows(rbind(as.matrix(unname(cell_partition_db)),as.matrix(partition_marker_sorted_hard)))
     
+    print("Cell Partition Length")
+    print(dim(cell_partition_db))
+    print("partition_marker_sorted_hard Length")
+    print(length(partition_marker_sorted_hard))
+    
+    print(dim(data.matrix(data.frame("V1" = cell_partition_db$cell_part,"V2" = unlist(partition_marker_sorted_hard)))))
+    nodes_and_partition_identifiers_hard <- sortrows(data.matrix(data.frame("V1" = cell_partition_db$cell_part,"V2" = unlist(partition_marker_sorted_hard))))
+    print("nodes_and_partition_identifiers_hard Length")
+    
+    print(dim(nodes_and_partition_identifiers_hard))
     
     partition_marker_sorted_hard <- list()
     for (i in 1:length(cell_partition_overlapping)){
-        partition_marker_sorted_hard <- c(partition_marker_sorted_hard,rep(i,length(cell_partition_overlapping)))
+        partition_marker_sorted_hard <- c(partition_marker_sorted_hard,rep(i,length(cell_partition_overlapping[[i]])))
     }
     for (k in 1:length(cell_partition_overlapping)){
         if(k == 1){
+            print(length(cell_partition_overlapping[[1]]))
             cell_partition_db_2 <- data.frame("cell_part" =cell_partition_overlapping[[1]])
         }else {
             cell_partition_db_2 <- rbind(cell_partition_db_2, data.frame("cell_part" = cell_partition_overlapping[[k]]))
         }
     }
-    nodes_and_partition_identifiers_overlapping <- sortrows(data.matrix(unlist(rbind(as.matrix(unname(cell_partition_db_2)),as.matrix(partition_marker_sorted_hard)))))
+    print("Cell PartitionDB")
+    print(dim(cell_partition_db_2))
+    nodes_and_partition_identifiers_overlapping <- sortrows(data.matrix(data.frame("V1" = cell_partition_db_2$cell_part,"V2"= unlist(partition_marker_sorted_hard))))
     
     
     record_stuff <- 0#cluster cood density stats
@@ -392,6 +407,7 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
         actual_counts <- temp_agr 
         active_labels <- unique(as.vector(current_listener_history))
         counts_normk <- colSums(actual_counts)  #',2)' needed for case of size-1 clusters
+        print('line 395 comp!')
         count_normk_norm1 <- as.matrix(counts_normk/sum(counts_normk))#proportions of various labels normalized to 1
         
         #if matrix is very sparse, or too large to store a full ADJ, we only care about generating expected counts of labels if a node actually receives some of that label
@@ -403,7 +419,9 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
             #scaled_kin=nback*([full(count_normk_norm1(x))]'.* kin(y)); #scales normalized counts by total input (some nodes have more inputs and thus you would expect more of all labels)
             #expected=sparse(x,y,scaled_kin, size(actual_counts,1),size(actual_counts,2));  #same format as lxn
             expected <- sparseMatrix(i=as.vector(x),j=as.vector(t(y)),x=as.vector(nback*(as.matrix(count_normk_norm1[x])* kin[y])),
-                                     symmetric = FALSE, repr='T')#same format as lxn
+                                     symmetric = FALSE, repr='T',dims = size(actual_counts))#same format as lxn
+            print('line 408 comp!')
+            
         } else {
             expected <- nback*(as.matrix(count_normk_norm1)*as.matrix(kin)) # %a bit slower for ADJ's with less than 3% density compared to option above (and more mem usage) but 10x faster on sparse
         }
@@ -421,12 +439,16 @@ SpeakEasycore <- function(ADJ,total_time,IC_store_relevant,nback,force_efficient
         #          full( expectedsparse-actual_counts)
         #          full( expected-actual_counts)
         #         length(find(min(( expectedsparse-actual_counts))>0))
+        print(dim(actual_counts))
+        print(dim(expected))
         tem <- actual_counts-expected
+        
         tem <- t(tem)
         max_vals <- apply(tem,1,max)
         max_idx <- apply(tem,1,which.max)
         # length(find(maxvals==0))   #might worry that for force_efficient==1 case max of some column will be zero, indicating a non-elegible label, but that never happens... could add 100 to each non-zero entry of actual_counts if worried, but really not necessary
         listener_history[i,] <-  active_labels[max_idx]
+        print('line 433 comp!')
         
     }#time-step loop
     
@@ -764,16 +786,17 @@ layer_SpeakEasy <- function(layers,iter,ADJ,timesteps,varargin=NULL){ ##ok<NCOMM
     
         }
         
-        for (k in 1:length(cell_partition_overlapping[[i]])){
+        #Since its always going to be 1 layer
+        for (k in 1:length(cell_partition_overlapping)){
             if(k == 1){
-                cell_partition_overlapping_db <- as.data.frame(cell_partition_overlapping[[i]][1])
+                print(length(cell_partition_overlapping[[1]]))
+                cell_partition_db_3 <- data.frame("cell_part" =cell_partition_overlapping[[1]])
             }else {
-                cell_partition_overlapping_db <- rbind(cell_partition_overlapping_db, as.data.frame(cell_partition_overlapping[[i]][k]))
+                cell_partition_db_3 <- rbind(cell_partition_db_3, data.frame("cell_part" = cell_partition_overlapping[[k]]))
             }
         }
         
-        
-        convenient_node_ordering[[i]]<- cell_partition_overlapping_db
+        convenient_node_ordering<- cell_partition_overlapping
         
         res_layer <- c("partition_codes_overlapping"=partition_codes_overlapping,
                        "cell_partition_overlapping"=cell_partition_overlapping,
