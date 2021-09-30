@@ -54,6 +54,7 @@ RUN R -e "install.packages('BiocManager')"\
     && R -e "install.packages('data.table')"\
     && R -e "install.packages('Rmpi')"\
     && R -e "install.packages('Matrix')" \
+    && R -e "install.packages('MEGENA')"\
     && R -e "install.packages('reader')"\
     && R -e "install.packages('caroline')"\
     && R -e "install.packages('bench')" \
