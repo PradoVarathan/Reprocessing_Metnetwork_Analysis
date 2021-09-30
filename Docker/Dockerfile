@@ -60,6 +60,7 @@ RUN R -e "install.packages('BiocManager')"\
     && R -e "install.packages('doParallel')"\
     && R -e "install.packages('parallel')"\
     && R -e "install.packages('snow')"\
+    && R -e "install.packages('linkcomm')"\
     && R -e "devtools::install_github('blogsdon/utilityFunctions')" \
     && R -e "install.packages('bit64')" \
     && Rscript -e 'install.packages(c("docopt", "devtools", "dplyr", "tidyr", "ggplot2", "reshape2", "knitr", "stringr", "readr", "plyr", "data.table", "rJava", "doParallel", "snow", "igraph", "Rcpp", "RcppEigen", "Rclusterpp", "RColorBrewer", "MRCE", "vbsr", "ctv", "psych", "reshape2", "vcd", "erer", "fpc", "pacman"))'\

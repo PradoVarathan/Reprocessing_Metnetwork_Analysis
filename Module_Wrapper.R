@@ -23,6 +23,8 @@ library(synapseClient)
 library(parallel)
 library(doParallel)
 library(foreach)
+library(linkcomm)
+
 # Obtaining the data - From User --------------------------------------------
 
 option_list <- list(make_option(c("-u","--synapse_user"), type="character", action = "store",
@@ -68,7 +70,8 @@ writeLines(paste('Total number of edges', sum(as.matrix(bicNetworks$network))))
 rank.cons = data.table::fread(fileName, data.table = F, header = T)
 rownames(rank.cons) = rank.cons$V1
 rank.cons$V1 = NULL
-all.used.ids = c(all.used.ids, rankConsNet.id)
+
+#all.used.ids = c(all.used.ids, rankConsNet.id)
 
 # Formulate adjacency matrix
 adj = rank.cons

@@ -1,0 +1,34 @@
+default:
+  input_profile:
+    project_id: syn25953317
+    input_proj_id: syn25992611
+    bic_file: syn26004256
+    temp_storage_loc: /home/sage
+    temp_input_loc: /home
+  provenance:
+    annotations:
+      data_type: ['clinical','geneExpression']
+      resource_type: metadata
+      metadata_type: 'analytical covariates'
+      ismodelsystem: FALSE
+      ismultispecimen: TRUE
+      fileformat: csv
+      grant: U01AG046152
+      species: Human
+      organ: brain
+      tissue: ['dorsolateral prefrontal cortex', 'Head of caudate nucleus', 'posterior cingulate cortex']
+      study: ["ROSMAP","rnaSeqReprocessing"]
+      consortium: AMP-AD
+      assay: rnaSeq
+    code_annotations:
+        repository: PradoVarathan/Reprocessing_Metanetwork_Analysis
+        ref: branch
+        ref_name: main
+        repository_path: Moduel_Wrapper.R
+    activity_name: 'Module Building Process'
+    activity_description: 'Using the consensus network to prepare gene modules from syn21266454 data'
+  output_profile:
+    output_path: rosmap_modules_
+    md5_output_path: rosmap_modulesmd5.out
+    output_name: 'rosmpa Modules'
+    error_path: rosmap_modules_err
