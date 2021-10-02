@@ -82,7 +82,8 @@ RUN yum -y update \
 
 RUN yum install -y maven \
     && yum install -y curl \
-    && yum install -y unzip
+    && yum install -y unzip \
+    && yum install -y screen
 
 
 RUN mkdir ~/metanetwork \

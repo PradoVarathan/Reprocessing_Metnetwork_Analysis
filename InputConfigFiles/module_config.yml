@@ -1,6 +1,7 @@
 default:
   input_profile:
     project_id: syn25953317
+    input_synid: syn21266454
     input_proj_id: syn25992611
     bic_file: syn26004256
     temp_storage_loc: /home/sage
@@ -24,11 +25,11 @@ default:
         repository: PradoVarathan/Reprocessing_Metanetwork_Analysis
         ref: branch
         ref_name: main
-        repository_path: Moduel_Wrapper.R
+        repository_path: Moduel_Wrapper
     activity_name: 'Module Building Process'
     activity_description: 'Using the consensus network to prepare gene modules from syn21266454 data'
   output_profile:
-    output_path: rosmap_modules_
+    output_path: rosmap_modules
     md5_output_path: rosmap_modulesmd5.out
     output_name: 'rosmpa Modules'
     error_path: rosmap_modules_err

@@ -130,18 +130,18 @@ megena['algorithms'] = 'megena'
 #speakeasy_r = metanetwork::findModules.speakeasy(adj)
 #speakeasy_r['algorithms'] = 'speakeasy_r'
 
-algorithms = c('GANXis','fast_greedy','label_prop','louvain','walktrap','infomap','linkcommunities','spinglass','megena')
+algorithms = c('GANXiS','fast_greedy','label_prop','louvain','walktrap','infomap','linkcommunities','spinglass','megena')
 # algorithms = c('CFinder', algorithms, 'speakeasy') add after correction of CF issue and rechecking the speakeasy implementation in R
 
 # Obtaining the data - For provenance --------------------------------------------
 
 activity <- synapser::synGet(config$input_profile$project_id)
 
-dataFolder <- Folder(method,parent = config$input_profile$project_id)
+dataFolder <- Folder('Modules',parent = config$input_profile$project_id)
 dataFolder <- synStore(dataFolder)
 for (filenumber in 1:length(algorithms)){
-  filePath = algorithms[filenumber]
-  temp_out <- paste0(outputpath,filePath,'.csv')
+  alg = algorithms[filenumber]
+  temp_out <- paste0(config$output_profile$outputpath,alg,'.csv')
   write.csv(filePath,temp_out)
   file <- File(path = temp_out, parent = dataFolder)
   file <- synStore(file)
@@ -196,7 +196,7 @@ for (filenumber in 1:length(algorithms)){
 
   ENRICH_OBJ <- synapser::synStore( synapser::File( 
     path = temp_out,
-    name = algorithm,
+    name = alg,
     parentId = activity$properties$id),
     used = config$input_profile$input_synid,
     activityName = config$provenance$activity_name,
@@ -211,22 +211,16 @@ for (filenumber in 1:length(algorithms)){
   cat(md5, '\n', file = config$output_profile$md5_output_path, sep = '')
 
   if(filenumber == 1){
-    table <- synBuildTable("Gene Module Result", project, filePath)
+    table <- synBuildTable("Gene Module Result", project, eval(as.symbol(alg)))
     table <- synStore(table)
     tableID <- table$tableId
     #check
     #table$schema
-  }
-  else{
-    synStore(Table(tableID, filePath))
+  } else{
+    synStore(Table(tableID, eval(as.symbol(alg))))
   }
     
 }
 
-
-# Formatting the network to md5 format --------------------------------------------
-
-
-if((!is.na(config$computing_specs$heavy_ncores)) || (!is.na(config$computing_specs$medium_ncores))){
-  mpi.quit(save = "no")
-}
+print("Modules Construction Completed and Uploaded to Synapse:")
+print(tableID)
