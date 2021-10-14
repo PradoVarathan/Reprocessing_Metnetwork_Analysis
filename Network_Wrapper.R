@@ -39,8 +39,7 @@ config <- config::get(file = req_args$config_file)
 setwd(config$input_profile$temp_storage_loc)
 
 #Linking with Project
-synLogin(email = req_args$synapse_user, password = req_args$synapse_pass)
-project = Project(config$input_profile$project_id)
+toproject = Project(config$input_profile$project_id)
 project <- synStore(project)
 
 # Data
