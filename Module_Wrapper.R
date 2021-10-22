@@ -123,7 +123,12 @@ spinglass = metanetwork::findModules.spinglass(adj, nperm = 3, min.module.size =
 spinglass['algorithms'] = 'spinglass'
 
 #megena
-megena = metanetwork::findModules.megena(adj, method = "pearson", FDR.cutoff = 0.05, module.pval = 0.05, hub.pval = 0.05,doPar = TRUE)
+# Data
+synID_input = config$input_profile$input_synid
+data = synGet(synID_input, downloadLocation = config$input_profile$temp_storage_loc)
+data = reader::reader(data$path)
+
+megena = metanetwork::findModules.megena(data, method = "pearson", FDR.cutoff = 0.05, module.pval = 0.05, hub.pval = 0.05,doPar = TRUE)
 megena['algorithms'] = 'megena'
 
 #Speakeasy
