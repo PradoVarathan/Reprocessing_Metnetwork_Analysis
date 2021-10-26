@@ -37,9 +37,10 @@ req_args <- parse_args(OptionParser(option_list=option_list))
 Sys.setenv(R_CONFIG_ACTIVE = "default")
 config <- config::get(file = req_args$config_file)
 setwd(config$input_profile$temp_storage_loc)
+synLogin(email = req_args$synapse_user, password = req_args$synapse_pass)
 
 #Linking with Project
-toproject = Project(config$input_profile$project_id)
+project = Project(config$input_profile$project_id)
 project <- synStore(project)
 
 # Data
@@ -61,11 +62,10 @@ if(config$computing_specs$heavy_ncores>0){
 net_methods = config$input_profile$network_method
 data = reader::reader(data$path)
 
-if (config$input_profile$na_fill == 'Winsorize'){
-    data <- metanetwork::winsorizeData(data)
-}
-else if (is.null(config$input_profile$na_fill)){
-  print('Data not normalized for missing values. Ignore if using mrnet method.')
+if (is.null(config$input_profile$na_fill)){
+    print('Data not normalized for missing values. Ignore if using mrnet method.')
+} else if (config$input_profile$na_fill == 'Winsorize'){
+      data <- metanetwork::winsorizeData(data)
 }
 
 for (method in net_methods){# Assuming we have more methods - not developing for now
