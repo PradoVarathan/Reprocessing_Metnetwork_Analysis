@@ -1,6 +1,6 @@
 #!/bin/sh
 
-curl -LJO https://github.com/cea-hpc/modules/releases/download/v4.7.1/modules-4$
+curl -LJO https://github.com/cea-hpc/modules/releases/download/v4.7.1/modules-4.7.1.tar.gz
 tar xfz modules-4.7.1.tar.gz
 cd modules-4.7.1
 ./configure
