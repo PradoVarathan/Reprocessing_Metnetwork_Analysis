@@ -9,6 +9,8 @@ synapser::synLogin()
 whole <- read.csv(synapser::synGet('syn21266454')$path, row.names = 1)
 whole <- read.csv('~/Documents/Test_Folder/C2.median_polish_corrected_log2(abundanceRatioCenteredOnMedianOfBatchMediansPerProtein)-8817x400.csv')
 
+whole$X = NULL
+
 #Randomize the columnsa
 set.seed(42)
 whole_rand <- whole[ ,
