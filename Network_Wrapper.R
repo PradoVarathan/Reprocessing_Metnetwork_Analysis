@@ -62,6 +62,8 @@ if(config$computing_specs$heavy_ncores>0){
 net_methods = config$input_profile$network_method
 data = reader::reader(data$path)
 
+
+
 if (is.null(config$input_profile$na_fill)){
     print('Data not normalized for missing values. Ignore if using mrnet method.')
 } else if (config$input_profile$na_fill == 'Winsorize'){
