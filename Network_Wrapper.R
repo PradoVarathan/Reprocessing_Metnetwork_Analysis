@@ -1,6 +1,6 @@
 
 # Calling in Libraries ----------------------------------------------------
-system('module load mpi/openmpi-x86_64')ß
+system('module load mpi/openmpi-x86_64')
 library(dplyr, quietly = TRUE)
 library(glmnet, quietly = TRUE)
 library(randomForest, quietly = TRUE)
