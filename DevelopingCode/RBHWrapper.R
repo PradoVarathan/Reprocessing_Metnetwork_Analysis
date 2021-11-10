@@ -105,8 +105,8 @@ rbh_pair_processing = function(dataset1, dataset2, method, geneList, cl){
 # TESTING SECTION ---------------------------------------------------------
 
 #Obtaining the geneList and removing it from the dataframe
-geneList = whole$X[1:500]
-whole = whole[1:500,]
+geneList = whole$X[1:2000]
+whole = whole[1:2000,]
 whole$X = NULL
 
 
