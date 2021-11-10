@@ -98,7 +98,8 @@ rbh_pair_processing = function(dataset1, dataset2, method, geneList, cl){
 # TESTING SECTION ---------------------------------------------------------
 
 #Obtaining the geneList and removing it from the dataframe
-geneList = whole$X
+geneList = whole$X[1:500]
+whole = whole[1:500,]
 whole$X = NULL
 
 
@@ -140,24 +141,11 @@ T_3[is.na(T_3)] = 0
 T_4[is.na(T_4)] = 0
 T_5[is.na(T_5)] = 0
 T_6[is.na(T_6)] = 0
-#MF
-mf_1 <- fastICA::fastICA(T_1, 10)
-mf_2 <- fastICA::fastICA(T_2,10)
-mf_3 <- fastICA::fastICA(T_3,10)
-mf_4 <- fastICA::fastICA(T_4,10)
-mf_5 <- fastICA::fastICA(T_5,10)
-mf_6 <- fastICA::fastICA(T_6,10)
 
-Metagenes_1 <- mf_1$S
-Metagenes_2 <- mf_2$S
-Metagenes_3 <- mf_3$S
-Metagenes_4 <- mf_4$S
-Metagenes_5 <- mf_5$S
-Metagenes_6 <- mf_6$S
 
 
 
 #Starting cluster 
 cl <- parallel::makeCluster(parallel::detectCores()-1)
 
-res_1_2 = rbh_pair_processing(Metagenes_1, Metagenes_2, 'pearson', geneList = geneList, cl)
+res_1_2 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
