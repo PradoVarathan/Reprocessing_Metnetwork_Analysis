@@ -156,24 +156,24 @@ T_6[is.na(T_6)] = 0
 cl <- parallel::makeCluster(parallel::detectCores()-1)
 
 res_1_2 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_1_3 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_1_4 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_1_5 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_1_6 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
+res_1_3 = rbh_pair_processing(T_1, T_3, 'pearson', geneList = geneList, cl)
+res_1_4 = rbh_pair_processing(T_1, T_4, 'pearson', geneList = geneList, cl)
+res_1_5 = rbh_pair_processing(T_1, T_5, 'pearson', geneList = geneList, cl)
+res_1_6 = rbh_pair_processing(T_1, T_6, 'pearson', geneList = geneList, cl)
 
-res_2_3 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_2_4 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_2_5 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_2_6 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
+res_2_3 = rbh_pair_processing(T_2, T_3, 'pearson', geneList = geneList, cl)
+res_2_4 = rbh_pair_processing(T_2, T_4, 'pearson', geneList = geneList, cl)
+res_2_5 = rbh_pair_processing(T_2, T_5, 'pearson', geneList = geneList, cl)
+res_2_6 = rbh_pair_processing(T_2, T_6, 'pearson', geneList = geneList, cl)
 
-res_3_4 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_3_5 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_3_6 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
+res_3_4 = rbh_pair_processing(T_3, T_4, 'pearson', geneList = geneList, cl)
+res_3_5 = rbh_pair_processing(T_3, T_5, 'pearson', geneList = geneList, cl)
+res_3_6 = rbh_pair_processing(T_3, T_6, 'pearson', geneList = geneList, cl)
 
-res_4_5 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_4_6 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
+res_4_5 = rbh_pair_processing(T_4, T_5, 'pearson', geneList = geneList, cl)
+res_4_6 = rbh_pair_processing(T_4, T_6, 'pearson', geneList = geneList, cl)
 
-res_5_6 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
+res_5_6 = rbh_pair_processing(T_5, T_6, 'pearson', geneList = geneList, cl)
 
 
 
