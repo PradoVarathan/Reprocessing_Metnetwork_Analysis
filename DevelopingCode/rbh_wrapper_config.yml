@@ -1,0 +1,20 @@
+default:
+  input_profile:
+    input_synid: syn21266454
+    temp_storage_loc: /home/sage
+    project_id:
+  provenance:
+    code_annotations:
+        repository: PradoVarathan/Reprocessing_Metanetwork_Analysis
+        ref: branch
+        ref_name: main
+        repository_path: RBH_Wrapper.R
+    activity_name: RBH_Build
+    activity_description: 'Using the RBH to prepare network from syn21266454 data'
+  output_profile:
+    output_path: syn21266454_lassoBIC
+    md5_output_path: syn21266454_lassoBICmd5.out
+    output_name: 'syn21266454_lassoBIC Network '
+    error_path: syn21266454_lassoBIC_err
+  computing_specs:
+    cores_to_use: 0

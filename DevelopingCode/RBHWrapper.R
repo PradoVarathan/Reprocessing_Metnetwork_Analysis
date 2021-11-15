@@ -1,5 +1,44 @@
 
 
+ibrary(dplyr, quietly = TRUE)
+library(glmnet, quietly = TRUE)
+library(randomForest, quietly = TRUE)
+library(Hmisc, quietly = TRUE)
+library(lars, quietly = TRUE)
+library(WGCNA, quietly = TRUE)
+library(synapser, quietly = TRUE)
+library(metanetwork, quietly = TRUE)
+library(githubr, quietly = TRUE)
+library(c3net, quietly = TRUE)
+library(config, quietly = TRUE)
+library(optparse, quietly = TRUE)
+library(data.table, quietly = TRUE)
+library(parmigene, quietly = TRUE)
+library(reader, quietly = TRUE)
+library(Rmpi)
+library(parallel)
+library(doParallel)
+library(ica)
+library(varhandle)
+
+option_list <- list(make_option(c("-u","--synapse_user"), type="character", action = "store",
+                                help = "Synapse User name"),
+                    make_option(c("-p","--synapse_pass"), type="character", action = "store",
+                                help = "Synapse User Password"),
+                    make_option(c("-c","--config_file"), type="character", action = "store",
+                                help = "Path to the complete config file"))          
+req_args <- parse_args(OptionParser(option_list=option_list))
+
+
+
+#Setting up the cofig file 
+Sys.setenv(R_CONFIG_ACTIVE = "default")
+config <- config::get(file = req_args$config_file)
+setwd(config$input_profile$temp_storage_loc)
+synLogin(email = req_args$synapse_user, password = req_args$synapse_pass)
+
+
+
 # Function to find the correlation matrix between two datasets via --------
 
 cor_func <- function( i, j, method, name_ind = 1) {
@@ -56,20 +95,18 @@ cor_func <- function( i, j, method, name_ind = 1) {
 rbh_pair_processing = function(dataset1, dataset2, method, geneList, cl){
   
   #Spliting the dataset into components using ICA analysis
-  mf_1 <- fastICA::fastICA(dataset1, 10)
-  mf_2 <- fastICA::fastICA(dataset2,10)
+  mf_1 <- ica::icafast(dataset1, 100)
+  mf_2 <- ica::icafast(dataset2,100)
   
   Metagenes_1 <- mf_1$S
   Metagenes_2 <- mf_2$S
   MetaSamples_1 <- mf_1$A
   MetaSamples_2 <- mf_2$A
   print("Starting first corelation matrix build")
-  
   res_1 <-as.data.frame(t(as.matrix(parallel::parApply(
     cl = cl, Metagenes_1, 1, cor_func,
     j = Metagenes_2, method = "pearson", name_ind = 1
   ))))
-  
   print("Starting second corelation matrix build")
   
   res_2 <- as.data.frame(t(as.matrix( parallel::parApply(
@@ -82,12 +119,10 @@ rbh_pair_processing = function(dataset1, dataset2, method, geneList, cl){
   idx_rbh = which(res_final$Index_1 == res_final$Index_2)
   res_rbh = res_final[idx_rbh,]
   
-  result_rbh = res_rbh[,c('Index_1','Index_2','Correlation_1')]
-  print(res_rbh)
-  
-  colnames(result_rbh) = c("Genes_from_Set1", "Genes_from_Set2","Correlation")
   print("Starting assesing gene names")
   
+  result_rbh = res_rbh[,c('Index_1','Index_2','Correlation_1')]
+  colnames(result_rbh) = c("Genes_from_Set1", "Genes_from_Set2","Correlation")
   for ( k in 1:nrow(result_rbh)){
     temp = as.integer(result_rbh$Genes_from_Set1[k])
     result_rbh$Genes_from_Set1[k] = geneList[temp]
@@ -99,81 +134,17 @@ rbh_pair_processing = function(dataset1, dataset2, method, geneList, cl){
 }
 
 
+synIDs = config$input_profile$input_synid
+if(config$computing_specs$cores_to_use>0){
+  nslaves = config$computing_specs$medium_ncores
+  mpi.spawn.Rslaves(nslaves=nslaves,hosts=NULL);
+}
 
+file_list = c()
+for (synID in synIDs){
 
+  data = synGet(synID,downloadLocation = config$input_profile$temp_input_loc)
+  file_list = c(file_list, data$path)
 
-# TESTING SECTION ---------------------------------------------------------
-
-#Obtaining the geneList and removing it from the dataframe
-geneList = whole$X[1:2000]
-whole = whole[1:2000,]
-whole$X = NULL
-
-
-#Randomize the columns
-set.seed(42)
-whole_rand <- whole[ ,
-                     sample(colnames(whole),
-                            size = dim(whole)[2],
-                            replace = FALSE
-                     )
-]
-
-# Dividing the dataset into six testing parts
-
-T_1 <- whole_rand[,
-                  1:floor(ncol(whole_rand)/6)
-]
-T_2 <- whole_rand[,
-                  (floor(ncol(whole_rand)/6)+1):(floor(ncol(whole_rand)/6)*2)
-]
-T_3 <- whole_rand[,
-                  ((floor(ncol(whole_rand)/6)*2)+1):(floor(ncol(whole_rand)/6)*3)
-]
-T_4 <- whole_rand[,
-                  ((floor(ncol(whole_rand)/6)*3)+1):(floor(ncol(whole_rand)/6)*4)
-]
-T_5 <- whole_rand[,
-                  ((floor(ncol(whole_rand)/6)*4)+1):(floor(ncol(whole_rand)/6)*5)
-]
-T_6 <- whole_rand[,
-                  ((floor(ncol(whole_rand)/6)*5)+1):ncol(whole_rand)
-]
-
-
-# Dividing into metagenes and metasamples via ICA
-T_1[is.na(T_1)] = 0
-T_2[is.na(T_2)] = 0
-T_3[is.na(T_3)] = 0
-T_4[is.na(T_4)] = 0
-T_5[is.na(T_5)] = 0
-T_6[is.na(T_6)] = 0
-
-
-
-
-#Starting cluster 
-cl <- parallel::makeCluster(parallel::detectCores()-1)
-
-res_1_2 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
-res_1_3 = rbh_pair_processing(T_1, T_3, 'pearson', geneList = geneList, cl)
-res_1_4 = rbh_pair_processing(T_1, T_4, 'pearson', geneList = geneList, cl)
-res_1_5 = rbh_pair_processing(T_1, T_5, 'pearson', geneList = geneList, cl)
-res_1_6 = rbh_pair_processing(T_1, T_6, 'pearson', geneList = geneList, cl)
-
-res_2_3 = rbh_pair_processing(T_2, T_3, 'pearson', geneList = geneList, cl)
-res_2_4 = rbh_pair_processing(T_2, T_4, 'pearson', geneList = geneList, cl)
-res_2_5 = rbh_pair_processing(T_2, T_5, 'pearson', geneList = geneList, cl)
-res_2_6 = rbh_pair_processing(T_2, T_6, 'pearson', geneList = geneList, cl)
-
-res_3_4 = rbh_pair_processing(T_3, T_4, 'pearson', geneList = geneList, cl)
-res_3_5 = rbh_pair_processing(T_3, T_5, 'pearson', geneList = geneList, cl)
-res_3_6 = rbh_pair_processing(T_3, T_6, 'pearson', geneList = geneList, cl)
-
-res_4_5 = rbh_pair_processing(T_4, T_5, 'pearson', geneList = geneList, cl)
-res_4_6 = rbh_pair_processing(T_4, T_6, 'pearson', geneList = geneList, cl)
-
-res_5_6 = rbh_pair_processing(T_5, T_6, 'pearson', geneList = geneList, cl)
-
-
+}
 
