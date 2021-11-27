@@ -1,6 +1,5 @@
 
 
-
 library(dplyr)
 
 if(!("fastICA" %in% rownames(installed.packages()))){
@@ -10,8 +9,6 @@ if(!("fastICA" %in% rownames(installed.packages()))){
 library(ica)
 library(varhandle)
 
-synapser::synLogin("Pradeep_Varathan_98","pRADEEP@01")
-whole <- read.csv(synapser::synGet('syn21266454')$path)
 
 
 
@@ -109,73 +106,63 @@ rbh_pair_processing = function(dataset1, dataset2, method, geneList, cl){
   return(result_rbh)
 }
 
-
+winsorizeData <- function(x){
+  library(dplyr)
+  
+  winsorize <- function(x,per=.99){
+    up <- quantile(x,per,na.rm=T)
+    low <- quantile(x,1-per,na.rm=T)
+    x[x>=up] <- up
+    x[x<=low] <- low
+    return(x)
+  }
+  
+  
+  replaceNaMean <- function(x){
+    if(sum(is.na(x))>0){
+      y <- x
+      y[is.na(x)] <- mean(x,na.rm=T)
+      return(y)
+    }else{
+      return(x)
+    }
+  }
+  
+  x <- t(x)
+  x <- apply(x,2,winsorize)
+  x <- apply(x,2,replaceNaMean)
+  x <- scale(x)
+  return(x)
+}
 
 
 
 # TESTING SECTION ---------------------------------------------------------
+synapser::synLogin("Pradeep_Varathan_98","pRADEEP@01")
+install.packages('reader')
+library(reader)
 
-#Obtaining the geneList and removing it from the dataframe
-geneList = whole$X
-whole$X = NULL
-geneList = unfactor(geneList)
-#Randomize the columns
-set.seed(42)
-whole_rand <- whole[ ,
-                     sample(colnames(whole),
-                            size = dim(whole)[2],
-                            replace = FALSE
-                     )
-]
+data_1 <- reader::reader(synapser::synGet('syn26387667')$path)
+data_2 <- reader::reader(synapser::synGet('syn26340641')$path)
 
-# Dividing the dataset into six testing parts
+# devtools::install_github('PradoVarathan/metanetwork')
+# BiocManager::install('WGCNA')
+# library(metanetwork)
+data_1 = winsorizeData(data_1)
+data_2 = winsorizeData(data_2)
+data_1 = t(data_1)
+data_2 = t(data_2)
 
-T_1 <- whole_rand[,
-                  1:floor(ncol(whole_rand)/2)
-]
-T_2 <- whole_rand[,
-                  (floor(ncol(whole_rand)/2)+1):ncol(whole_rand)
-]
-# T_3 <- whole_rand[,
-#                   ((floor(ncol(whole_rand)/6)*2)+1):(floor(ncol(whole_rand)/6)*3)
-#                   ]
-# T_4 <- whole_rand[,
-#                   ((floor(ncol(whole_rand)/6)*3)+1):(floor(ncol(whole_rand)/6)*4)
-#                   ]
-# T_5 <- whole_rand[,
-#                   ((floor(ncol(whole_rand)/6)*4)+1):(floor(ncol(whole_rand)/6)*5)
-#                   ]
-# T_6 <- whole_rand[,
-#                   ((floor(ncol(whole_rand)/6)*5)+1):ncol(whole_rand)
-#                   ]
+geneList1 = rownames(data_1) 
+geneList2 = rownames(data_2)
+
+geneList = intersect(geneList1,geneList2)
+data_1 = data_1[geneList,]
+data_2= data_2[geneList,]
 
 
-# Dividing into metagenes and metasamples via ICA
-T_1[is.na(T_1)] = 0
-T_2[is.na(T_2)] = 0
-# T_3[is.na(T_3)] = 0
-# T_4[is.na(T_4)] = 0
-# T_5[is.na(T_5)] = 0
-# T_6[is.na(T_6)] = 0
-'''
-#MF
-mf_1 <- ica::icafast(T_1, 10)
-mf_2 <- ica::icafast(T_2,10)
-mf_3 <- ica::icafast(T_3,10)
-mf_4 <- ica::icafast(T_4,10)
-mf_5 <- ica::icafast(T_5,10)
-mf_6 <- ica::icafast(T_6,10)
-
-Metagenes_1 <- mf_1$S
-Metagenes_2 <- mf_2$S
-Metagenes_3 <- mf_3$S
-Metagenes_4 <- mf_4$S
-Metagenes_5 <- mf_5$S
-Metagenes_6 <- mf_6$S
-
-
-'''
 #Starting cluster 
+  
 cl <- parallel::makeCluster(parallel::detectCores()-1)
 
-res_1_2 = rbh_pair_processing(T_1, T_2, 'pearson', geneList = geneList, cl)
+res_1_2 = rbh_pair_processing(data_1, data_2, 'pearson', geneList = geneList, cl)
