@@ -5,6 +5,7 @@ default:
     input_proj_id: syn21266454
     temp_storage_loc: /home/sage
     temp_input_loc: /home
+    pattern_id: Network
   provenance:
     annotations:
       data_type: ['clinical','geneExpression']
