@@ -43,7 +43,7 @@ project <- synStore(project)
 
 outputpath = config$input_profile$temp_storage_loc
 networkFolderId = config$input_profile$input_folderid
-pattern_id = config$input_profile$input_proj_id
+pattern_id = config$input_profile$pattern_id
 
 buildConsensus(outputpath = outputpath,networkFolderId = networkFolderId,pattern_id = pattern_id, fileName = fileName)
 
