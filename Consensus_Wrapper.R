@@ -1,4 +1,4 @@
-# Calling in Libraries ----------------------------------------------------
+ Calling in Libraries ----------------------------------------------------
 
 library(dplyr, quietly = TRUE)
 library(glmnet, quietly = TRUE)
@@ -23,13 +23,13 @@ option_list <- list(make_option(c("-u","--synapse_user"), type="character", acti
                     make_option(c("-p","--synapse_pass"), type="character", action = "store",
                                 help = "Synapse User Password"),
                     make_option(c("-c","--config_file"), type="character", action = "store",
-                                help = "Path to the complete config file"))          
+                                help = "Path to the complete config file"))
 req_args <- parse_args(OptionParser(option_list=option_list))
 
 
 # Obtaining the data - From Synapse --------------------------------------------
 
-#Setting up the cofig file 
+#Setting up the cofig file
 Sys.setenv(R_CONFIG_ACTIVE = "default")
 config <- config::get(file = req_args$config_file)
 
@@ -48,7 +48,7 @@ network_names = c('c3net','mrnet','wgcna',
                   'lassoAIC','lassoBIC','lassoCV1se','lassoCVmin','ridgeAIC','ridgeBIC','ridgeCV1se','ridgeCVmin',
                   'sparrowZ','sparrow2Z','tigress','genie3')
 
-child_obj <- synapser::synGetChildren(networkFolderId, includeTypes = list('folder'))              
+child_obj <- synapser::synGetChildren(as.character(networkFolderId), includeTypes = list('folder'))
 child_list <- as.list(child_obj)
 child_names = c()
 for(k in 1:length(child_list)){
@@ -57,13 +57,17 @@ for(k in 1:length(child_list)){
     nn = temp_name['name']
     nn = as.character(nn)
     child_names = c(child_names,nn)
-  }
+}
+
   #child_names <- lapply(child_list, `[[`, 1)
   #child_names <- unlist(child_names)
 out_list <- list()
-for (ent in 1:length(child_names)){
+print(length(child_names))
+for(ent in 1:length(child_names)){
+    print('st1')
     temp_l = synGetChildren(child_list[[ent]]$id)
     temp_list = temp_l$asList()
+    print(temp_list)
     temp_names = c()
     temp_ids = c()
     for(k in 1:length(temp_list)){
@@ -88,8 +92,9 @@ for (ent in 1:length(child_names)){
       temp <- synGet(id_t, downloadLocation = outputpath)
       out_list <- append(out_list, temp)
   }
+}
 bar = out_list
-buildConsensus(outputpath = outputpath,networkFolderId = networkFolderId,pattern_id = pattern_id, fileName = fileName)
+buildConsensus(outputpath = outputpath,networkFolderId = networkFolderId,pattern_id = pattern_id, fileName = fileName, bar= out_list)
 
 
 # Obtaining the data - For provenance --------------------------------------------
@@ -117,7 +122,7 @@ checkAnnotations <- function(annotations, config){
     species = NULL,
     organ = NULL,
     tissue = NULL,
-    study = NULL, 
+    study = NULL,
     consortium = NULL,
     assay = NULL
   )
@@ -150,7 +155,7 @@ try(
   ), silent = TRUE
 )
 
-ENRICH_OBJ <- synapser::synStore( synapser::File( 
+ENRICH_OBJ <- synapser::synStore( synapser::File(
   path = paste0(outputpath,'rankConsensusNetwork.csv'),
   name = 'RankConsensusNetwork',
   parentId = activity$properties$id),
@@ -171,3 +176,5 @@ cat(md5, '\n', file = config$output_profile$md5_output_path, sep = '')
 if((!is.na(config$computing_specs$heavy_ncores)) || (!is.na(config$computing_specs$medium_ncores))){
   mpi.quit(save = "no")
 }
+
+
