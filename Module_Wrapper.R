@@ -120,6 +120,7 @@ linkcommunities['algorithms'] = 'linkcommunities'
 
 #Spinglass
 spinglass = metanetwork::findModules.spinglass(adj, nperm = 3, min.module.size = 30)
+spinglass = as.data.frame(spinglass)
 spinglass['algorithms'] = 'spinglass'
 
 #megena
