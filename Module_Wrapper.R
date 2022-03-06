@@ -95,24 +95,33 @@ temp_command <- paste0("unzip ",ga_loc$path," -d /home/sage/")
 system(temp_command)
 GANXiS = metanetwork::findModules.GANXiS(adj, '/home/sage/GANXiS_v3.0.2/', nperm = 3, min.module.size = 30)
 GANXiS['algorithms'] = 'GANXiS'
+cat('Completed GANXiS algorithm \n')
+
 #Fast Greedy Algorithm
 fast_greedy = metanetwork::findModules.fast_greedy(adj, nperm = 3, min.module.size = 30)
 fast_greedy['algorithms'] = 'fast_greedy'
+cat('Completed Fast Greedy algorithm \n')
+
 #Label_Prop
 label_prop = metanetwork::findModules.label_prop(adj, nperm = 3, min.module.size = 30)
 label_prop['algorithms'] = 'label_prop'
+cat('Completed Label Prop algorithm \n')
 
 #Louvain
 louvain = metanetwork::findModules.louvain(adj, nperm = 3, min.module.size = 30)
 louvain['algorithms'] = 'louvain'
+cat('Completed Louvain algorithm \n')
 
 #Walktrap
 walktrap = metanetwork::findModules.walktrap(adj, nperm = 3, min.module.size = 30)
 walktrap['algorithms'] = 'walktrap'
+cat('Completed Walktrap algorithm \n')
+
 
 #Infomap
 infomap = metanetwork::findModules.infomap(adj, nperm = 3, min.module.size = 30)
 infomap['algorithms'] = 'infomap'
+cat('Completed Infomap algorithm \n')
 
 #Link Communities
 linkcommunities = metanetwork::findModules.linkcommunities(adj, nperm = 3, min.module.size = 30)
@@ -122,6 +131,8 @@ linkcommunities['algorithms'] = 'linkcommunities'
 spinglass = metanetwork::findModules.spinglass(adj, nperm = 3, min.module.size = 30)
 spinglass = as.data.frame(spinglass)
 spinglass['algorithms'] = 'spinglass'
+cat('Completed Spinglass algorithm \n')
+
 
 #megena
 # Data
@@ -131,6 +142,8 @@ data = reader::reader(data$path)
 
 megena = metanetwork::findModules.megena(data, method = "pearson", FDR.cutoff = 0.05, module.pval = 0.05, hub.pval = 0.05,doPar = TRUE)
 megena['algorithms'] = 'megena'
+cat('Completed MEGENA algorithm \n')
+
 
 #Speakeasy
 #speakeasy_r = metanetwork::findModules.speakeasy(adj)
