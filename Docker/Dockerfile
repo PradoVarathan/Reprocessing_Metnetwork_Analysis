@@ -1,103 +1,55 @@
-ARG BASE_IMAGE=rstudio/r-base
-FROM ${BASE_IMAGE}:centos7
+FROM rstudio/r-base:3.6.3-centos7
 
-ARG R_VERSION=3.6.3
-ARG OS_IDENTIFIER=centos-7
-
-# Install R
-RUN wget https://cdn.rstudio.com/r/${OS_IDENTIFIER}/pkgs/R-${R_VERSION}-1-1.x86_64.rpm && \
-    yum -y install epel-release && \
-    yum -y install ./R-${R_VERSION}-1-1.x86_64.rpm && \
-    ln -s /opt/R/${R_VERSION}/bin/R /usr/bin/R && \
-    ln -s /opt/R/${R_VERSION}/bin/Rscript /usr/bin/Rscript && \
-    ln -s /opt/R/${R_VERSION}/lib/R /usr/lib/R && \
-    rm R-${R_VERSION}-1-1.x86_64.rpm && \
-    yum -y remove epel-release && \
-    yum clean all
-
-RUN cd ~ && \
-    sudo yum update -y && \
-    echo "export PS1=\"\n\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;38m\]\u\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;15m\]@\h[\[$(tput sgr0)\]\[\033[38;5;214m\]\W\[$(tput sgr0)\]\[\033[38;5;15m\]]: \[$(tput sgr0)\]\"" >> ~/.bashrc && \
-    . ~/.bashrc && \
-    mkdir /shared && \
-    mkdir /shared/rlibs && \
-    sudo chown root /shared/rlibs && \
-    sudo yum install -y openmpi && \
-    sudo yum install -y openmpi-devel && \
-    sudo yum install -y git && \
-    sudo yum install -y nano && \
-    sudo yum -y install libcurl libcurl-devel && \
-    sudo yum -y install openssl-devel && \
-    sudo yum -y install libxml2-devel && \
-    sudo yum install -y libpng-devel && \
-    sudo yum install -y libjpeg-turbo-devel && \
-    sudo yum -y groupinstall 'Development Tools' && \
-    sudo yum -y install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel
+RUN yum update -y \
+	&& echo "export PS1=\"\n\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;38m\]\u\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;15m\]@\h[\[$(tput sgr0)\]\[\033[38;5;214m\]\W\[$(tput sgr0)\]\[\033[38;5;15m\]]: \[$(tput sgr0)\]\"" >> ~/.bashrc \ && . ~/.bashrc \ 
+	&& mkdir /shared \
+	&& mkdir /shared/rlibs \
+	&& chown root /shared/rlibs \
+	&& yum install -y epel-release \
+	&& yum install -y openmpi-1.10.7 \
+	&& yum install -y openmpi-devel-1.10.7 \
+	&& yum install -y git \
+	&& yum install -y nano \
+	&& yum -y install libcurl libcurl-devel \ 
+	&& yum -y install openssl-devel \
+	&& yum -y install libxml2-devel \
+	&& yum install -y libpng-devel \
+	&& yum install -y libjpeg-turbo-devel \
+	&& yum -y groupinstall 'Development Tools' \
+	&& yum -y install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel \
+	&& yum -y remove java \ 
+	&& yum install -y java-1.8.0-openjdk \
+	&& yum install -y java-1.8.0-openjdk-devel \
+	&& yum install -y maven \ 
+	&& yum install -y curl \
+	&& yum install -y unzip \
+	&& yum install -y screen \ 
+	&& yum install -y centos-release-scl \
+	&& yum install -y devtoolset-8-gcc* \
+	&& yum install -y wget
 
 RUN echo "local({r <- getOption('repos'); r['CRAN'] <- 'http://cran.r-project.org' ; options(repos=r)})" >> /opt/R/3.6.3/lib/R/etc/Rprofile.site
 
-RUN R -e "install.packages('BiocManager')"\
-    && R -e "install.packages('dplyr')"\
-    && R -e "install.packages('glmnet')"\
-    && R -e "install.packages('randomForest')"\
-    && R -e "install.packages('Hmisc')"\
-    && R -e "install.packages('lars')"\
-    && R -e "BiocManager::install('WGCNA')"\
-    && R -e "install.packages('devtools')"\
-    && R -e "install.packages('synapser', repos=c('http://ran.synapse.org', 'http://cran.fhcrc.org'))"\
-    && R -e "devtools::install_github('PradoVarathan/metanetwork')"\
-    && R -e "devtools::install_github('brian-bot/githubr')"\
-    && R -e "install.packages('c3net')"\
-    && R -e "install.packages('config')"\
-    && R -e "install.packages('optparse')"\
-    && R -e "install.packages('parmigene')"\
-    && R -e "install.packages('data.table')"\
-    && R -e "install.packages('Rmpi')"\
-    && R -e "install.packages('Matrix')" \
-    && R -e "install.packages('MEGENA')"\
-    && R -e "install.packages('reader')"\
-    && R -e "install.packages('caroline')"\
-    && R -e "install.packages('bench')" \
-    && R -e "install.packages('doParallel')"\
-    && R -e "install.packages('parallel')"\
-    && R -e "install.packages('snow')"\
-    && R -e "install.packages('linkcomm')"\
-    && R -e "devtools::install_github('blogsdon/utilityFunctions')" \
-    && R -e "install.packages('bit64')" \
-    && Rscript -e 'install.packages(c("docopt", "devtools", "dplyr", "tidyr", "ggplot2", "reshape2", "knitr", "stringr", "readr", "plyr", "data.table", "rJava", "doParallel", "snow", "igraph", "Rcpp", "RcppEigen", "Rclusterpp", "RColorBrewer", "MRCE", "vbsr", "ctv", "psych", "reshape2", "vcd", "erer", "fpc", "pacman"))'\
-    && Rscript -e 'install.packages(c("RJSONIO", "RCurl", "digest"))'
+# Rmpi install
+ENV LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:${LD_LIBRARY_PATH}
+ENV PATH=/usr/lib64/openmpi/bin/:${PATH}
 
-RUN  Rscript -e 'BiocManager::install(c("limma", "biovizBase", "e1071", "org.Hs.eg.db", "edgeR", "AnnotationDbi", "biomaRt", "ComplexHeatmap", "FDb.InfiniumMethylation.hg19", "RDAVIDWebService", "topGO", "goseq", "GO.db", "GSVA", "org.Hs.eg.db", "edgeR", "limma", "CePa", "Biobase", "pracma", "annotate", "BiocInstaller", "Biostrings", "GEOquery", "GOstats", "graph", "GSEABase", "impute", "preprocessCore"))'\
-    && Rscript -e 'library(devtools); install_github("th1vairam/CovariateAnalysis@dev")'
+RUN R -e "install.packages('http://cran.rstudio.com/src/contrib/Archive/rjson/rjson_0.2.13.tar.gz', repos=NULL, type='source')" \
+	&& R -e "options(repos = c('http://cran.r-project.org', 'http://cran.fhcrc.org', 'http://ran.synapse.org'))" \
+	&& R -e "install.packages('Rmpi',configure.args=c(Rmpi='--with-Rmpi-libpath=/usr/lib64/openmpi/lib --with-Rmpi-include=/usr/include/openmpi-x86_64/ --with-Rmpi-type=OPENMPI'))"
 
-RUN  export LD_LIBRARY_PATH=/usr/lib64/openmpi-1.10/lib:$LD_LIBRARY_PATH \
-    && Rscript -e 'install.packages("Rmpi", configure.args = paste("--with-Rmpi-include=/usr/include/openmpi-x86_64","--with-Rmpi-libpath=/usr/lib64/openmpi/lib","--with-Rmpi-type=OPENMPI"))'\
-    && Rscript -e 'install.packages("idr")'
+# RandomForest
+RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/randomForest/randomForest_4.6-12.tar.gz', repos=NULL, type='source')" 
 
-RUN yum -y update \
-    && yum -y remove java \
-    && yum install -y \
-       java-1.8.0-openjdk \
-       java-1.8.0-openjdk-devel
+# Glmnet
+RUN scl enable devtoolset-8 bash \
+	&& R -e "dotR <- file.path(Sys.getenv('HOME'), '.R'); if (!file.exists(dotR)) dir.create(dotR); M <- file.path(dotR, 'Makevars'); if (!file.exists(M)) file.create(M); cat('\nCXX14FLAGS=-O3 -march=native -mtune=native -fPIC', 'CXX14=/opt/rh/devtoolset-8/root/usr/bin/g++', file = M, sep = '\n', append = TRUE)" \
+	&& R -e "install.packages('glmnet')"
 
-RUN yum install -y maven \
-    && yum install -y curl \
-    && yum install -y unzip \
-    && yum install -y screen
+# Synapser
+RUN R -e "install.packages('PythonEmbedInR', repos=c('http://cran.fhcrc.org', 'http://ran.synapse.org'))" \
+	&& R -e "install.packages('synapser', repos=c('http://ran.synapse.org', 'http://cran.fhcrc.org'))"
 
-
-RUN mkdir ~/metanetwork \
-    && mkdir ~/Analysis_Scripts \
-    && mkdir /home/test_res/ \
-    && git clone https://github.com/PradoVarathan/metanetwork ~/metanetwork \
-    && mkdir /home/test_res/.openmpi \
-    && touch /home/test_res/.openmpi/mca-params.conf \
-    && echo "orte_default_hostfile=/home/test_res/default_host" >> /home/test_res/.openmpi/mca-params.conf \
-    && echo "localhost slots=32" >> /home/test_res/default_host
-
-
-
-
-
-
-
+# Metanets
+RUN R -e "install.packages('devtools')" \
+	&& R -e "devtools::install_github('PradoVarathan/metanetwork')"
