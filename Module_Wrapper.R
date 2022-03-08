@@ -149,7 +149,14 @@ cat('Completed MEGENA algorithm \n')
 #speakeasy_r = metanetwork::findModules.speakeasy(adj)
 #speakeasy_r['algorithms'] = 'speakeasy_r'
 
-algorithms = c('GANXiS','fast_greedy','label_prop','louvain','walktrap','infomap','linkcommunities','spinglass','megena')
+algorithms = c('GANXiS',
+               'fast_greedy',
+               'label_prop','louvain',
+               'walktrap',
+               'infomap',
+               'linkcommunities',
+               'spinglass',
+               'megena')
 # algorithms = c('CFinder', algorithms, 'speakeasy') add after correction of CF issue and rechecking the speakeasy implementation in R
 
 # Obtaining the data - For provenance --------------------------------------------
@@ -160,6 +167,7 @@ dataFolder <- Folder('Modules',parent = config$input_profile$project_id)
 dataFolder <- synStore(dataFolder)
 for (filenumber in 1:length(algorithms)){
   alg = algorithms[filenumber]
+  filePath = eval(as.symbol(alg))
   temp_out <- paste0(config$output_profile$outputpath,alg,'.csv')
   write.csv(filePath,temp_out)
   file <- File(path = temp_out, parent = dataFolder)
@@ -241,5 +249,5 @@ for (filenumber in 1:length(algorithms)){
     
 }
 
-print("Modules Construction Completed and Uploaded to Synapse:)
+print("Modules Construction Completed and Uploaded to Synapse:")
 print(tableID)
