@@ -88,8 +88,7 @@ for (ent in 1:length(child_names)){
       temp <- synGet(id_t, downloadLocation = outputpath)
       out_list <- append(out_list, temp)
   }
-bar = out_list
-buildConsensus(outputpath = outputpath,networkFolderId = networkFolderId,pattern_id = pattern_id, fileName = fileName)
+buildConsensus(outputpath = outputpath,networkFolderId = networkFolderId,pattern_id = pattern_id, fileName = fileName,bar = out_list)
 
 
 # Obtaining the data - For provenance --------------------------------------------
